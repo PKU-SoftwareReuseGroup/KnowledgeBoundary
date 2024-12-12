@@ -77,13 +77,17 @@ $$
 **感知流** 就是 **正确性** 和 **确定性** 的变化
 
 **正确性：**
+
 $$
 Cor(\mathcal{M},x_i)=\frac{1}{N}\sum_{\hat{a_j}\in \hat{A}_{i}}1(\hat{a_j}=x_i.a)
 $$
+
 **确定性：**
+
 $$
 Cer(\mathcal{M},x_i)=\frac{1}{N(N-1)}\sum_{\hat{a_j},\hat{a_k}\in \hat{A}_{i},j\ne k}\cos(E(a_j),E(a_k))
 $$
+
 其中$\hat{A_i}$是对于问题$i$的多次回答答案的集合，$E(a_j)$是回答$a_j$的表征向量。
 
 ## 方法：
