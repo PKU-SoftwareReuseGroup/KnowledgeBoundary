@@ -1,0 +1,9 @@
+# conda 环境 kb = knowledge boundary
+scipy==1.13.1
+# 中文模型 Qwen 需要的分词器 和 transformers 相关包
+tiktoken==0.8.0
+transformers_stream_generator==0.0.5
+# 中文模型 Qwen 建议安装的 flash-attn
+flash-attn==2.7.2.post1
+# zhipuai  # 2.1.5.20241204
+
