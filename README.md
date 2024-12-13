@@ -52,3 +52,6 @@ HF_ENDPOINT='https://hf-mirror.com' python run_MMLU.py --model openlm-research/o
 
 
 ## Task 2.2.2 避免知道的知识被错回复为“不知道”，降低或者避免over-refusal
+[TASK2.2.2 理论](./LMFlow/Task2_2_2.md)
+进行finetune时，为避免模块冲突，请用conda复制一份环境，并还原`transformers == 4.47.0`和`tokenizers==0.21.0`版本
+其他修正方式请参照[finetune管理文档](./LMFlow/FinetuneChange.md)
