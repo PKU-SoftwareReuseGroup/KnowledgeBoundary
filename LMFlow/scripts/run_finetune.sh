@@ -6,11 +6,12 @@
 export NCCL_P2P_DISABLE=1
 export NCCL_IB_DISABLE=1
 export WANDB_API_KEY=b23f406cf873dad9d573cdc6868e8ee14fa1a0db
-model_name_or_path=/data/data_public/ysq/models/models--openlm-research--open_llama_3b/snapshots/141067009124b9c0aea62c76b3eb952174864057
 
-dataset_path=../training_data/open_llama_3b
+model_name_or_path=/data/data_public/breeze/models/openlm-research/open_llama_3b
 
-output_dir=output_models/finetuned_llama_3b_MMLU_unsure 
+dataset_path=/data/data_public/breeze/KnowledgeBoundary/LMFlow/2.2.2_0_ModelGenData/open_llama_3b
+
+output_dir=/data/data_public/breeze//output_models/finetuned_llama_3b 
 
 deepspeed_args="--master_port=11000"
 

@@ -573,7 +573,8 @@ class Finetuner(BaseTuner):
             args=training_args,
             train_dataset=train_dataset if training_args.do_train else None,
             eval_dataset=eval_dataset if training_args.do_eval else None,
-            tokenizer=model.get_tokenizer(),
+            # tokenizer=model.get_tokenizer(),
+            processing_class=model.get_tokenizer(),
             # Data collator will default to DataCollatorWithPadding, so we change it.
             data_collator=data_collator,
             compute_metrics=compute_metrics if training_args.do_eval else None,
