@@ -50,7 +50,7 @@ $$
 Cer(\mathcal{M},x_i)=\frac{1}{N(N-1)}\sum_{\hat{a_j},\hat{a_k}\in \hat{A}_{i},j\ne k}\cos(E(a_j),E(a_k))
 $$
 
-其中 $`\hat{A_i}`$ 是对于问题$i$的多次回答答案的集合， $`E(a_j)`$ 是回答 $`a_j`$ 的表征向量。
+其中 $`\hat{A_i}`$ 是对于问题$`i`$的多次回答答案的集合， $`E(a_j)`$ 是回答 $`a_j`$ 的表征向量。
 表征向量由 https://huggingface.co/sentence-transformers/all-MiniLML6-v2 模型算出
 
 ## 方法：
