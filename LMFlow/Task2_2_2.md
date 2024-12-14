@@ -25,10 +25,13 @@ $$
 
 ### 在MCQA（知识导向的多项选择题问答）任务中，选择 MMLU 数据集
 **正确性correctness:**
+
 $$
 Cor(\mathcal{M},x_i)=p(x_i.a|x_i.q,\mathcal{M})
 $$
+
 **确定性Certainty：**
+
 $$
 Cer(\mathcal{M},x_i)=-\sum_{\hat{a}\in O}P(\hat{a}|x_i.q,\mathcal{M})log(p(\hat{a}|x_i.q,\mathcal{M}))
 $$
