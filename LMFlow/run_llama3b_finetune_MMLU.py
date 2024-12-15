@@ -10,7 +10,8 @@ import os
 import numpy as np
 
 DATASET= "../data/MMLU/MMLU_ID_train.json"
-MODELPATH = "../../output_models/finetuned_llama_3b"
+# MODELPATH = "../../output_models/finetuned_llama_3b"
+MODELPATH = "../../output_models/finetuned_2_llama_3b"
 
 choices = ["A", "B", "C", "D"]
 

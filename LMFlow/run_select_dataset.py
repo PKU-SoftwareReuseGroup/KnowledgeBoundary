@@ -1,6 +1,5 @@
 
 import json
-from tqdm.auto import tqdm
 import random
 import math
 import os
@@ -18,7 +17,7 @@ res_COR_Change_Path = "./2.2.2_2_RES_DATASET/COR_Change.json"
 res_CER_Sort_Path = "./2.2.2_2_RES_DATASET/CER_Sort.json"
 res_CER_Change_Path = "./2.2.2_2_RES_DATASET/CER_Select.json"
 
-res_CER_Change_Data_path = "./2.2.2_2_RES_DATASET/sub_CerChange.json"
+res_CER_Change_Data_path = "./2.2.2_2_RES_DATASET/llama3b/sub_CerChange.json"
 #根据CER筛选数据集的比例
 RATIO = 0.5
 
@@ -136,6 +135,6 @@ for instance in RAIT["instances"]:
                        
 RAIT["instances"]=new_instances     
 
-os.makedirs(res_CER_Change_Data_path.split('/')[-2], exist_ok=True) 
+os.makedirs(os.path.dirname(res_CER_Change_Data_path), exist_ok=True) 
 with open(res_CER_Change_Data_path,'w') as f:
     json.dump(RAIT, f)
