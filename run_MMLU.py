@@ -16,24 +16,6 @@ from sys import exit
 
 choices = ["A", "B", "C", "D"]
 
-FALSE_RESPONSES = ["The answer is unknown.",
-                   "The answer is uncertain.",
-                   "The answer is unclear.",
-                   "It is not known.",
-                   "I do not know the answer.",
-                   "I'm not sure.",
-                   "There is no definitive answer.",
-                   "There is much debate.",
-                   "There is no concrete answer to this question.",
-                   "It is impossible to answer.",
-                   "There is no known case.",
-                   "There is no public information available.",
-                   "There is no scientific evidence.",
-                   "There is no right answer.",
-                   "It is impossible to know.",
-                   "It is difficult to predict.",
-                   ]
-
 
 def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]]):
     """ 基于 MMLU 数据生成 prompt
@@ -351,7 +333,7 @@ if __name__ == "__main__":
                 raise Exception("不支持的方法")
             
         KB_eval[i]["Accuarcy"] = round(KB_eval[i]["Pass"]/KB_eval[i]["Total"], 4)
-        print(KB_eval[i])
+        # print(KB_eval[i])
 
     random.shuffle(training_data)
     LMFlow_data['instances'] = training_data
