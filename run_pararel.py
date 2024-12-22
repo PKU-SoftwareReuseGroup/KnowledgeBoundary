@@ -220,10 +220,13 @@ if __name__ == "__main__":
 
     # 这里存放知识边界评估的结果 knowledge_boundary_eval
     ParaRel_pass, ParaRel_total = 0, 0
+    # NOTE 只在评估知识边界时，统计经过 GLM-4-Air 二次评价后 模型的准确率
+    #  对于 2.2.1 任务，还是从模型忠诚度的角度出发，用 in 的方式来严格限制
+    Judge_pass = 0
 
     # NOTE sample[0] 是问题. sample[1] 是回答. 这里似乎抛弃了 sample[2]
-    for sample in tqdm(data[100:105]):
-    # for sample in tqdm(data):
+    # for sample in tqdm(data[100:115]):
+    for sample in tqdm(data):
 
         full_input = gen_prompt(sample[0])
         
@@ -236,24 +239,25 @@ if __name__ == "__main__":
             # print(f"Model Answer: {output}")
             # NOTE 对比 标准回答 A 和 模型回答 A' 划分 不确定集D_0、确定集D_1
             # 这里加一个主要是因为 只因为首字母不同导致判断失误的太多了
-            # try:
-            #     if sample[1] in output or sample[1].capitalize() in output:
-            #         text += " I am sure."
-            #         ParaRel_pass += 1
-            #     else:
-            #         judge_res = judge_answer_similarity(sample[0], sample[1], output)
-            #         if "YES" in judge_res:
-            #             # print("评估合格")
-            #             text += " I am sure."
-            #             ParaRel_pass += 1
-            #         else:
-            #             text += " I am unsure."
-            # except Exception as e:
-            #     print(f"⚠ Error during inference: {e}\n发生错误的是{sample[0]}\n{sample[1]}\n")
-            #     # 如果遇到敏感内容错误，直接认为 unsure
-            #     text += " I am unsure."
+            try:
+                if sample[1] in output or sample[1].capitalize() in output:
+                    text += " I am sure."
+                    ParaRel_pass += 1
+                    Judge_pass += 1
+                else:
+                    text += " I am unsure."
+                    judge_res = judge_answer_similarity(sample[0], sample[1], output)
+                    if "YES" in judge_res:
+                        # text += " I am sure."
+                        # ParaRel_pass += 1
+                        Judge_pass += 1
+                    # else:
+                    #     text += " I am unsure."
+            except Exception as e:
+                print(f"⚠ Error during inference: {e}\n发生错误的是{sample[0]}\n{sample[1]}\n")
+                # 如果遇到敏感内容错误，直接认为 unsure
+                text += " I am unsure."
                 
-            # print(text)
             training_data.append({"text":text})
             ParaRel_total += 1
 
@@ -273,8 +277,10 @@ if __name__ == "__main__":
     
     KB_eval = {
         "Pass": ParaRel_pass,
+        "JudgePass": Judge_pass,
         "Total": ParaRel_total,
-        "Accuarcy": round(ParaRel_pass/ParaRel_total, 4)
+        "Accuarcy": round(ParaRel_pass/ParaRel_total, 4),
+        "JudgeAccuarcy": round(Judge_pass/ParaRel_total, 4)
     }
     os.makedirs("./2.1_evalution_res", exist_ok=True)
     os.makedirs(f"./2.1_evalution_res/{model_name}", exist_ok=True)
