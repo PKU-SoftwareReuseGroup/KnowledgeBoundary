@@ -185,7 +185,7 @@ def inference(
         generated_ids = model.generate(
             **model_inputs,
             max_new_tokens=512,
-            # FIXME 这里显式指定 pad_token 只是为了不要让控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation 这条信息
+            # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
             pad_token_id=0
         )
         generated_ids = [ output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids) ]
@@ -351,5 +351,6 @@ if __name__ == "__main__":
         "Accuarcy": round(MMLU_pass/MMLU_total, 4)
     }
     os.makedirs("./2.1_evalution_res", exist_ok=True)
-    with open(f"./2.1_evalution_res/KB_for_{model_name}_on_MMLU.json", "w") as f:
+    os.makedirs(f"./2.1_evalution_res/{model_name}", exist_ok=True)
+    with open(f"./2.1_evalution_res/{model_name}/KB_on_MMLU.json", "w") as f:
         json.dump(KB_eval, f)

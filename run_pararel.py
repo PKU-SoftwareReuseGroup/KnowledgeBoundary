@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer,AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
 import torch
 import json
 from tqdm.auto import tqdm
@@ -10,10 +10,15 @@ import os
 
 # 引入自定义变量
 from constants import HF_HOME, client
+# 引入 exit 用于调试
+from sys import exit
 
 
 def gen_prompt(input_text: str):
-    return "Question:" + input_text + " Answer:"
+    if args.model == "openlm-research/open_llama_3b":
+        return "Question:" + input_text + " Answer:"
+    # 其他模型用比较强的提示
+    return f"Now I have a Question: {input_text}\nPlease answer the question based on your internal knowledge: "
 
 
 def inference(full_input: str):
@@ -23,23 +28,52 @@ def inference(full_input: str):
         model: 用于推理的模型
         full_input: 0-shot prompt 开放域知识问答没有例子
     """
-    inputs = tokenizer(full_input,return_tensors="pt").to(0)
-    ids = inputs['input_ids']
-    length = len(ids[0])
-     
-    outputs = model.generate(
-            ids,
-            #temperature=0.7,
-            #do_sample = True,
-            # FIXME 截断模型输出？
-            max_new_tokens = 15,
+    output_text = ""
+    if args.model == "openlm-research/open_llama_3b":
+        inputs = tokenizer(full_input,return_tensors="pt").to(0)
+        ids = inputs['input_ids']
+        length = len(ids[0])
+        
+        outputs = model.generate(
+                ids,
+                #temperature=0.7,
+                #do_sample = True,
+                max_new_tokens = 15,
+            )
+        # FIXME 因为这个模型是一个补全模型，生成的内容是接续在输入之后，所以要从这以后 截取输出
+        output_text = tokenizer.decode(outputs[0][length:])
+        # print(f"数据库问题\n{full_input}")
+        # print(f"模型对数据库问题完整的回答\n{output_text}")
+        idx = output_text.find('.')
+        output_text = output_text[:idx]
+
+    elif args.model == "THUDM/chatglm2-6b":
+        response, history = model.chat(tokenizer, full_input, history=[])
+        # print(f"response: {response}")
+        output_text = response.split('.')[0] + "."
+
+    elif args.model == "Qwen/Qwen2.5-3B":
+        messages = [
+            {"role": "system", "content": f"You are a Knowledge Q&A expert."},
+            {"role": "user", "content": full_input},
+        ]
+        text = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
         )
-    # FIXME 因为这个模型是一个补全模型，生成的内容是接续在输入之后，所以要从这以后 截取输出
-    output_text = tokenizer.decode(outputs[0][length:])
-    # print(f"数据库问题\n{full_input}")
-    # print(f"模型对数据库问题完整的回答\n{output_text}")
-    idx = output_text.find('.')
-    output_text = output_text[:idx]
+        model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+        generated_ids = model.generate(
+            **model_inputs,
+            max_new_tokens=32,
+            # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
+            pad_token_id=0
+        )
+        generated_ids = [ output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids) ]
+        response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        # print(response)
+        output_text = response.split('.')[0] + "."
+
     return output_text
 
 
@@ -51,7 +85,7 @@ def judge_answer_similarity(q: str, a1: str, a2: str):
 如果 回答2 中的信息和 回答1 含义相似（不区分大小写），或者从另一个方面回答了和 回答1 的相似的含义，那么我们认为它是合格的。
 如果 回答2 对于 问题 的回答 和 回答1 有较大的差异，或者 回答2 给出的答案过度宽泛，那么我们认为它是不合格的。
 注意: 回答2 是否是一个完整的句子，是否包含了其他信息，**不作为其是否合格的判断依据**
-任务: 判断回答2的正确性，回答我 YES 或者 NO，并另起一行给出你的理由。
+任务: 判断回答2的正确性，回答 YES 或者 NO，并另起一行 **简要** 给出判断理由。
 
 下面是一些例子，请参考后完成任务。
 
@@ -92,7 +126,7 @@ NO
     response = client.chat.completions.create(
         model="glm-4-air",
         messages=[
-            {"role": "system", "content": "你是一个评判者，你只会基于用户提供的信息，不利用或者补充你自己掌握的知识。"},
+            {"role": "system", "content": "你是一个评判者，你只会基于用户提供的信息，不利用你自己掌握的知识。"},
             {"role": "user", "content": full_input}
         ],
         # temperature=0.3
@@ -188,8 +222,8 @@ if __name__ == "__main__":
     ParaRel_pass, ParaRel_total = 0, 0
 
     # NOTE sample[0] 是问题. sample[1] 是回答. 这里似乎抛弃了 sample[2]
-    # for sample in tqdm(data[:5]):
-    for sample in tqdm(data):
+    for sample in tqdm(data[100:105]):
+    # for sample in tqdm(data):
 
         full_input = gen_prompt(sample[0])
         
@@ -202,22 +236,22 @@ if __name__ == "__main__":
             # print(f"Model Answer: {output}")
             # NOTE 对比 标准回答 A 和 模型回答 A' 划分 不确定集D_0、确定集D_1
             # 这里加一个主要是因为 只因为首字母不同导致判断失误的太多了
-            try:
-                if sample[1] in output or sample[1].capitalize() in output:
-                    text += " I am sure."
-                    ParaRel_pass += 1
-                else:
-                    judge_res = judge_answer_similarity(sample[0], sample[1], output)
-                    if "YES" in judge_res:
-                        # print("评估合格")
-                        text += " I am sure."
-                        ParaRel_pass += 1
-                    else:
-                        text += " I am unsure."
-            except Exception as e:
-                print(f"⚠ Error during inference: {e}\n发生错误的是{sample[0]}\n{sample[1]}\n")
-                # 如果遇到敏感内容错误，直接认为 unsure
-                text += " I am unsure."
+            # try:
+            #     if sample[1] in output or sample[1].capitalize() in output:
+            #         text += " I am sure."
+            #         ParaRel_pass += 1
+            #     else:
+            #         judge_res = judge_answer_similarity(sample[0], sample[1], output)
+            #         if "YES" in judge_res:
+            #             # print("评估合格")
+            #             text += " I am sure."
+            #             ParaRel_pass += 1
+            #         else:
+            #             text += " I am unsure."
+            # except Exception as e:
+            #     print(f"⚠ Error during inference: {e}\n发生错误的是{sample[0]}\n{sample[1]}\n")
+            #     # 如果遇到敏感内容错误，直接认为 unsure
+            #     text += " I am unsure."
                 
             # print(text)
             training_data.append({"text":text})
@@ -243,6 +277,7 @@ if __name__ == "__main__":
         "Accuarcy": round(ParaRel_pass/ParaRel_total, 4)
     }
     os.makedirs("./2.1_evalution_res", exist_ok=True)
-    with open(f"./2.1_evalution_res/KB_for_{model_name}_on_ParaRel.json", "w") as f:
+    os.makedirs(f"./2.1_evalution_res/{model_name}", exist_ok=True)
+    with open(f"./2.1_evalution_res/{model_name}/KB_on_ParaRel.json", "w") as f:
         json.dump(KB_eval, f)
 
