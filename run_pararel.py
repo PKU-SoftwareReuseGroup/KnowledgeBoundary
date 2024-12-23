@@ -243,14 +243,14 @@ if __name__ == "__main__":
                 if sample[1] in output or sample[1].capitalize() in output:
                     text += " I am sure."
                     ParaRel_pass += 1
-                    Judge_pass += 1
+                    # Judge_pass += 1
                 else:
                     text += " I am unsure."
-                    judge_res = judge_answer_similarity(sample[0], sample[1], output)
-                    if "YES" in judge_res:
-                        # text += " I am sure."
-                        # ParaRel_pass += 1
-                        Judge_pass += 1
+                    # judge_res = judge_answer_similarity(sample[0], sample[1], output)
+                    # if "YES" in judge_res:
+                    #     # text += " I am sure."
+                    #     # ParaRel_pass += 1
+                    #     Judge_pass += 1
                     # else:
                     #     text += " I am unsure."
             except Exception as e:
