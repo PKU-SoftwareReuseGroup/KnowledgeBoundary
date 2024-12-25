@@ -1,14 +1,12 @@
-from argparse import ArgumentParser
 import json
 import os
 import random
+from argparse import ArgumentParser
 from sys import exit
 
 import numpy as np
-import pandas as pd
 import torch
 from tqdm.auto import tqdm
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
 # 引入自定义函数
 from constants import get_TOKENIZER_and_MODEL
 
@@ -206,13 +204,9 @@ if __name__ == "__main__":
             if np.isnan(CORCER[domain][sample[0]]["CER"]) or np.isnan(CORCER[domain][sample[0]]["COR"]):
                 print(f"⚠ Error during inference: {CORCER[domain][sample[0]]}\n发生错误的问题是{sample[0]}\n")
                 print(_)
-                print(probs)
                 print(np_probs)
                 print(log_probs)
                 exit(0)
-                # 如果遇到敏感内容错误，直接认为 unsure
-                # CORCER[domain][sample[0]]["COR"] = 0.0000
-                # CORCER[domain][sample[0]]["CER"] = 0.0000
             
             # 统计领域问题数 和 总问题数
             Calcu_PASS[domain]["TOTAL"] += 1
