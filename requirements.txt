@@ -5,5 +5,9 @@ tiktoken==0.8.0
 transformers_stream_generator==0.0.5
 # 中文模型 Qwen 建议安装的 flash-attn
 flash-attn==2.7.2.post1
-# zhipuai  # 2.1.5.20241204
+# 中文模型 Qwen2.5 需要安装 
+Jinja2==3.0.2
+
+
+zhipuai  # 2.1.5.20241204
 
