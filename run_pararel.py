@@ -52,7 +52,7 @@ def inference(full_input: str):
         # print(f"response: {response}")
         output_text = response.split('.')[0] + "."
 
-    elif args.model == "Qwen/Qwen2.5-3B":
+    elif args.model == "Qwen/Qwen2.5-3B" or args.model == "Qwen/Qwen2-1.5B-Instruct":
         messages = [
             {"role": "system", "content": f"You are a Knowledge Q&A expert."},
             {"role": "user", "content": full_input},
@@ -203,8 +203,17 @@ if __name__ == "__main__":
             cache_dir=HF_HOME
         )
 
-    elif args.model == "Qwen/Qwen2-1.5B": # https://hf-mirror.com/Qwen/Qwen2-1.5B
-        pass
+    elif args.model == "Qwen/Qwen2-1.5B-Instruct":
+        tokenizer = AutoTokenizer.from_pretrained(
+            "Qwen/Qwen2-1.5B-Instruct",
+            cache_dir=HF_HOME
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            "Qwen/Qwen2-1.5B-Instruct",
+            torch_dtype="auto",
+            device_map="auto",
+            cache_dir=HF_HOME
+        )
     else:
         raise Exception("模型尚未支持")
 
@@ -240,17 +249,18 @@ if __name__ == "__main__":
             # NOTE 对比 标准回答 A 和 模型回答 A' 划分 不确定集D_0、确定集D_1
             # 这里加一个主要是因为 只因为首字母不同导致判断失误的太多了
             try:
-                if sample[1] in output or sample[1].capitalize() in output:
+                # if sample[1] in output or sample[1].capitalize() in output:
+                if sample[1].lower() in output.lower():
                     text += " I am sure."
                     ParaRel_pass += 1
-                    # Judge_pass += 1
+                    Judge_pass += 1
                 else:
                     text += " I am unsure."
-                    # judge_res = judge_answer_similarity(sample[0], sample[1], output)
-                    # if "YES" in judge_res:
-                    #     # text += " I am sure."
-                    #     # ParaRel_pass += 1
-                    #     Judge_pass += 1
+                    judge_res = judge_answer_similarity(sample[0], sample[1], output)
+                    if "YES" in judge_res:
+                        # text += " I am sure."
+                        # ParaRel_pass += 1
+                        Judge_pass += 1
                     # else:
                     #     text += " I am unsure."
             except Exception as e:
