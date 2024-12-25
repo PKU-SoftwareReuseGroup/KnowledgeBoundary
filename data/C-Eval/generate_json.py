@@ -59,15 +59,17 @@ task_list = [
 ]
 
 
+DATA_DIR = "/data/data_public/ysq/benchmark/C-Eval/ceval-exam"
+
 train_data = {}
 test_data = {}
 
 
-# 将 C-Eval 数据集的 val 集作为训练集，dev 集作为测试集，将其转为 JSON
+# 将 C-Eval 数据集的 val 集作为训练集，dev 集作为 fewshots 集，将其转为 JSON
 # 抛弃了 dev 集的 explaination 字段
 for task_name in task_list:
 
-    train_df = pd.read_csv(f"./val/{task_name}_val.csv")
+    train_df = pd.read_csv(f"{DATA_DIR}/val/{task_name}_val.csv")
     # print(train_df.columns)
     # 初始化 key: 领域, value: 问题-答案列表
     # TODO 要不要利用 subject_mapping.json 将领域名转为 中文？
@@ -91,8 +93,8 @@ for task_name in task_list:
         json.dump(train_data, f, ensure_ascii=False, indent=4)
 
     
-    test_df = pd.read_csv(f"./dev/{task_name}_dev.csv")
-    # print(test_df.columns)
+    test_df = pd.read_csv(f"{DATA_DIR}/dev/{task_name}_dev.csv")
+    # print(test_df.shape[0])   # 每个都是 5 个题目，作为 5-shots
     test_data[task_name] = []
     for index, row in test_df.iterrows():
         QA_item = []
@@ -102,10 +104,11 @@ for task_name in task_list:
         QA_item.append(row["C"])
         QA_item.append(row["D"])
         QA_item.append(row["answer"])
+        QA_item.append(row["explanation"])
         test_data[task_name].append(QA_item)
 
-    with open (f"./test.json", "w", encoding="utf-8") as f:
+    with open (f"./5-shots.json", "w", encoding="utf-8") as f:
         json.dump(test_data, f)
 
-    with open (f"./test_ch.json", "w", encoding="utf-8") as f:
+    with open (f"./5-shots_ch.json", "w", encoding="utf-8") as f:
         json.dump(test_data, f, ensure_ascii=False, indent=4)

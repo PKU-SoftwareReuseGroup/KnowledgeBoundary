@@ -28,15 +28,12 @@ def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]])
     prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
     # NOTE fewshot 构建
     for data in prompt_data:
-        # fewshot 的 Question
-        prompt += data[0]
-        # fewshot 中作为选项的 Answer 的个数
-        k = len(data) - 2
-        # 格式化加入 A B C D 四个回答
-        for j in range(k):
+        prompt += data[0]       # fewshot 的 Question
+        k = len(data) - 2       # fewshot 中作为选项的 Answer 的个数
+        for j in range(k):      # 格式化加入 A B C D 四个选项
             prompt += f"\n{choices[j]}. {data[j+1]}"
         prompt += f"\nAnswer:{data[k+1]}\n\n"
-    # prompt += "Now, please analyze the following question, choose the correct answer from options A, B, C, and D. and give reasons for your judgment.\n"
+    # NOTE 问题加入
     prompt += input_list[0]
     k = len(input_list) - 2
     for j in range(k):
@@ -79,6 +76,12 @@ def inference(
         subject: 领域名称
     """
     output_text = ""
+    # 去掉 MMLU 子领域中的下划线，加空格
+    l = subject.split("_")
+    s = ""
+    for entry in l:
+        s += " " + entry
+
     if args.model == "openlm-research/open_llama_3b":
         inputs = tokenizer(full_input,return_tensors="pt").to(0)
         ids = inputs['input_ids']
@@ -166,10 +169,6 @@ def inference(
         output_text = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(probs)]
     
     elif args.model == "Qwen/Qwen2.5-3B":
-        l = subject.split("_")
-        s = ""
-        for entry in l:
-            s += " " + entry
         # FIXME 注意这里 Qwen2.5-3B 用的 prompt 和其他模型不一致
         messages = [
             {"role": "system", "content": f"You are an expert on{s}. You must answer me first and then give me your reasons."},
@@ -193,6 +192,9 @@ def inference(
         tmpList = response.split('.')
         output_text = f"{tmpList[0]}. {tmpList[1]}"
         # print(output_text)
+    
+    elif args.model == "Qwen/Qwen2-1.5B-Instruct":
+    
     return output_text
 
 
