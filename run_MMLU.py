@@ -1,6 +1,4 @@
 # 参考 R-tuning 项目 https://github.com/shizhediao/R-Tuning/
-# 中文模型的分词器基于tiktoken https://hf-mirror.com/Qwen/Qwen-7B#tokenizer
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel
 import torch
 import json
 from tqdm.auto import tqdm
@@ -11,7 +9,7 @@ import math
 import os
 import numpy as np
 # 引入自定义变量
-from constants import HF_HOME
+from constants import get_TOKENIZER_and_MODEL
 from sys import exit
 
 choices = ["A", "B", "C", "D"]
@@ -19,6 +17,8 @@ choices = ["A", "B", "C", "D"]
 
 def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]]):
     """ 基于 MMLU 数据生成 prompt
+    这个 prompt 是针对 “如果模型还没有被调成一个 chatbot” 的情况。所以不应该加入 指令性语句
+    而是以 fewshots 的形式让模型进行 text completion/genertion
     Params:
         input_text: MMLU 的多选题数据 Question, Option1, Option2, Option3, Option4, Answer
         subject: MMLU 的 key——领域名称
@@ -36,7 +36,6 @@ def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]])
         for j in range(k):
             prompt += f"\n{choices[j]}. {data[j+1]}"
         prompt += f"\nAnswer:{data[k+1]}\n\n"
-    # NOTE 模型求解问题构建，我这里加入了指导性语句
     # prompt += "Now, please analyze the following question, choose the correct answer from options A, B, C, and D. and give reasons for your judgment.\n"
     prompt += input_list[0]
     k = len(input_list) - 2
@@ -212,62 +211,7 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    if args.model == "openlm-research/open_llama_3b":
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.model, use_fast=True, unk_token="<unk>",bos_token="<s>",eos_token="</s>",add_bos_token=False,
-            cache_dir=HF_HOME,
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            args.model, device_map='auto',
-            cache_dir=HF_HOME,
-        )
-    
-    elif args.model == "THUDM/chatglm2-6b": # https://hf-mirror.com/THUDM/chatglm2-6b
-        tokenizer = AutoTokenizer.from_pretrained(
-            "THUDM/chatglm2-6b",
-            trust_remote_code=True,
-            # padding_side="left",
-            cache_dir=HF_HOME
-        )
-        model = AutoModel.from_pretrained(
-            "THUDM/chatglm2-6b",
-            trust_remote_code=True,
-            device='cuda',
-            cache_dir=HF_HOME
-        ).eval()
-
-    elif args.model == "Qwen/Qwen-7B":
-        # https://hf-mirror.com/Qwen/Qwen-7B 上描述它在 MMLU 上的5-shot表现是 58.2
-        # 需要安装 tiktoken transformers_stream_generator
-        # 警告安装 flash-attn https://github.com/Dao-AILab/flash-attention
-        tokenizer = AutoTokenizer.from_pretrained(
-            # Qwen-7B 不支持添加 unknown special tokens
-            "Qwen/Qwen-7B", use_fast=True,
-            trust_remote_code=True, 
-            cache_dir=HF_HOME
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen-7B", device_map='auto',
-            trust_remote_code=True,
-            cache_dir=HF_HOME
-        ).eval()
-
-    elif args.model == "Qwen/Qwen2.5-3B":
-        tokenizer = AutoTokenizer.from_pretrained(
-            "Qwen/Qwen2.5-3B",
-            cache_dir=HF_HOME
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen2.5-3B",
-            torch_dtype="auto",
-            device_map="auto",
-            cache_dir=HF_HOME
-        )
-
-    elif args.model == "Qwen/Qwen2-1.5B": # https://hf-mirror.com/Qwen/Qwen2-1.5B
-        pass
-    else:
-        raise Exception("模型尚未支持")
+    tokenizer, model = get_TOKENIZER_and_MODEL(args.model)
 
     # print(f"================模型设备检查: {model.device}================")
     # exit(0)

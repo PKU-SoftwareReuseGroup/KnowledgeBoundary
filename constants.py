@@ -12,7 +12,13 @@ client = ZhipuAI(api_key=GLM_KEY)
 
 
 def get_TOKENIZER_and_MODEL(model_name: str):
+    """根据 model_name 返回模型和分词器
+    中文模型的分词器基于 `tiktoken` https://hf-mirror.com/Qwen/Qwen-7B#tokenizer
+    Args: model_name: 模型名称
+    Returns: tokenizer, model
+    """
     tokenizer, model = None, None
+
     if model_name == "openlm-research/open_llama_3b":
         tokenizer = AutoTokenizer.from_pretrained(
             "openlm-research/open_llama_3b", use_fast=True, unk_token="<unk>",bos_token="<s>",eos_token="</s>",add_bos_token=False,
@@ -54,18 +60,7 @@ def get_TOKENIZER_and_MODEL(model_name: str):
             cache_dir=HF_HOME
         ).eval()
 
-    elif model_name == "Qwen/Qwen2.5-3B":
-        tokenizer = AutoTokenizer.from_pretrained(
-            "Qwen/Qwen2.5-3B",
-            cache_dir=HF_HOME
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            "Qwen/Qwen2.5-3B",
-            torch_dtype="auto",
-            device_map="auto",
-            cache_dir=HF_HOME
-        )
-
+    # NOTE 目前效果最好的模型
     # 原模型是 5-shots，微调过后是 0-shot
     elif model_name == "Qwen/Qwen2-1.5B-Instruct":
         tokenizer = AutoTokenizer.from_pretrained(
@@ -74,6 +69,18 @@ def get_TOKENIZER_and_MODEL(model_name: str):
         )
         model = AutoModelForCausalLM.from_pretrained(
             "Qwen/Qwen2-1.5B-Instruct",
+            torch_dtype="auto",
+            device_map="auto",
+            cache_dir=HF_HOME
+        )
+
+    elif model_name == "Qwen/Qwen2.5-3B":
+        tokenizer = AutoTokenizer.from_pretrained(
+            "Qwen/Qwen2.5-3B",
+            cache_dir=HF_HOME
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            "Qwen/Qwen2.5-3B",
             torch_dtype="auto",
             device_map="auto",
             cache_dir=HF_HOME
