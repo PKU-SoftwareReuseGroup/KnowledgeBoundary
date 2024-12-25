@@ -1,0 +1,147 @@
+{
+    "abstract_algebra": {
+        "PASS": 9,
+        "TOTAL": 50,
+        "ACC": 0.18
+    },
+    "anatomy": {
+        "PASS": 37,
+        "TOTAL": 68,
+        "ACC": 0.5441
+    },
+    "astronomy": {
+        "PASS": 37,
+        "TOTAL": 76,
+        "ACC": 0.4868
+    },
+    "business_ethics": {
+        "PASS": 24,
+        "TOTAL": 50,
+        "ACC": 0.48
+    },
+    "clinical_knowledge": {
+        "PASS": 78,
+        "TOTAL": 133,
+        "ACC": 0.5865
+    },
+    "college_biology": {
+        "PASS": 44,
+        "TOTAL": 72,
+        "ACC": 0.6111
+    },
+    "college_chemistry": {
+        "PASS": 16,
+        "TOTAL": 50,
+        "ACC": 0.32
+    },
+    "college_computer_science": {
+        "PASS": 22,
+        "TOTAL": 50,
+        "ACC": 0.44
+    },
+    "college_mathematics": {
+        "PASS": 8,
+        "TOTAL": 50,
+        "ACC": 0.16
+    },
+    "college_medicine": {
+        "PASS": 42,
+        "TOTAL": 87,
+        "ACC": 0.4828
+    },
+    "college_physics": {
+        "PASS": 16,
+        "TOTAL": 51,
+        "ACC": 0.3137
+    },
+    "computer_security": {
+        "PASS": 31,
+        "TOTAL": 50,
+        "ACC": 0.62
+    },
+    "conceptual_physics": {
+        "PASS": 60,
+        "TOTAL": 118,
+        "ACC": 0.5085
+    },
+    "econometrics": {
+        "PASS": 24,
+        "TOTAL": 57,
+        "ACC": 0.4211
+    },
+    "electrical_engineering": {
+        "PASS": 44,
+        "TOTAL": 73,
+        "ACC": 0.6027
+    },
+    "elementary_mathematics": {
+        "PASS": 77,
+        "TOTAL": 189,
+        "ACC": 0.4074
+    },
+    "formal_logic": {
+        "PASS": 18,
+        "TOTAL": 63,
+        "ACC": 0.2857
+    },
+    "global_facts": {
+        "PASS": 18,
+        "TOTAL": 50,
+        "ACC": 0.36
+    },
+    "high_school_biology": {
+        "PASS": 99,
+        "TOTAL": 155,
+        "ACC": 0.6387
+    },
+    "high_school_chemistry": {
+        "PASS": 50,
+        "TOTAL": 102,
+        "ACC": 0.4902
+    },
+    "high_school_computer_science": {
+        "PASS": 25,
+        "TOTAL": 50,
+        "ACC": 0.5
+    },
+    "high_school_european_history": {
+        "PASS": 63,
+        "TOTAL": 83,
+        "ACC": 0.759
+    },
+    "high_school_geography": {
+        "PASS": 73,
+        "TOTAL": 99,
+        "ACC": 0.7374
+    },
+    "high_school_government_and_politics": {
+        "PASS": 70,
+        "TOTAL": 97,
+        "ACC": 0.7216
+    },
+    "high_school_macroeconomics": {
+        "PASS": 98,
+        "TOTAL": 195,
+        "ACC": 0.5026
+    },
+    "high_school_mathematics": {
+        "PASS": 43,
+        "TOTAL": 135,
+        "ACC": 0.3185
+    },
+    "high_school_microeconomics": {
+        "PASS": 65,
+        "TOTAL": 119,
+        "ACC": 0.5462
+    },
+    "high_school_physics": {
+        "PASS": 21,
+        "TOTAL": 76,
+        "ACC": 0.2763
+    },
+    "Final_Evaluation": {
+        "Pass": 1212,
+        "Total": 2448,
+        "Accuarcy": 0.4951
+    }
+}

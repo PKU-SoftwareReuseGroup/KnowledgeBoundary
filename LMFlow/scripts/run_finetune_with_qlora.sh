@@ -2,11 +2,31 @@
 # Please run this script under ${project_id} in project directory of
 
 # Parses arguments
-model_name_or_path=meta-llama/Llama-2-13b-hf
-dataset_path=data/alpaca/train_conversation
-conversation_template=llama2
-output_dir=output_models/finetune
+# model_name_or_path=meta-llama/Llama-2-13b-hf
+# dataset_path=data/alpaca/train_conversation
+# conversation_template=llama2
+# output_dir=output_models/finetune
+# deepspeed_args="--master_port=11000"
+
+
+
+export NCCL_P2P_DISABLE=1
+export NCCL_IB_DISABLE=1
+export WANDB_API_KEY=b23f406cf873dad9d573cdc6868e8ee14fa1a0db
+
+model_name_or_path=/data/data_public/breeze/models/Qwen/Qwen2-7B
+# model_name_or_path=/data/data_public/ysq/models/models--Qwen--Qwen2.5-3B/snapshots/3aab1f1954e9cc14eb9509a215f9e5ca08227a9b
+#RAIT数据集
+# dataset_path=/data/data_public/breeze/KnowledgeBoundary/2.2.2_TASK/2.2.2_0_ModelGenData/Qwen2-7B
+
+dataset_path=/data/data_public/breeze/KnowledgeBoundary/2.2.2_TASK/2.2.2_0_ModelGenData/models--Qwen--Qwen2.5-3B
+# #筛选后的数据集
+# dataset_path=/data/data_public/breeze/KnowledgeBoundary/LMFlow/2.2.2_2_RES_DATASET/llama3b
+
+output_dir=/data/data_public/breeze/output_models/finetuned_QWen2_7b_MMLU_N
+#output_dir=/data/data_public/breeze/output_models/finetuned_QWen2.5_3b_MMLU_N
 deepspeed_args="--master_port=11000"
+conversation_template=qwen2
 
 # Safety related arguments
 trust_remote_code=0

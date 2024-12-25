@@ -9,13 +9,13 @@ export WANDB_API_KEY=b23f406cf873dad9d573cdc6868e8ee14fa1a0db
 
 model_name_or_path=/data/data_public/breeze/models/openlm-research/open_llama_3b
 
-# #RAIT数据集
-# dataset_path=/data/data_public/breeze/KnowledgeBoundary/LMFlow/2.2.2_0_ModelGenData/open_llama_3b
+#RAIT数据集
+dataset_path=/data/data_public/breeze/KnowledgeBoundary/LMFlow/2.2.2_0_ModelGenData/open_llama_3b
 
-#筛选后的数据集
-dataset_path=/data/data_public/breeze/KnowledgeBoundary/LMFlow/2.2.2_2_RES_DATASET/llama3b
+# #筛选后的数据集
+# dataset_path=/data/data_public/breeze/KnowledgeBoundary/LMFlow/2.2.2_2_RES_DATASET/llama3b
 
-output_dir=/data/data_public/breeze//output_models/finetuned_2_llama_3b 
+output_dir=/data/data_public/breeze//output_models/finetuned_llama_3b_RAIT_E 
 
 deepspeed_args="--master_port=11000"
 

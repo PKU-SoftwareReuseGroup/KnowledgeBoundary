@@ -1,0 +1,205 @@
+{
+    "abstract_algebra": {
+        "PASS": 10,
+        "UNPASS": 40,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.2
+    },
+    "anatomy": {
+        "PASS": 31,
+        "UNPASS": 37,
+        "REFUSE": 0,
+        "TOTAL": 68,
+        "ACC": 0.4559
+    },
+    "astronomy": {
+        "PASS": 42,
+        "UNPASS": 34,
+        "REFUSE": 0,
+        "TOTAL": 76,
+        "ACC": 0.5526
+    },
+    "business_ethics": {
+        "PASS": 26,
+        "UNPASS": 24,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.52
+    },
+    "clinical_knowledge": {
+        "PASS": 80,
+        "UNPASS": 53,
+        "REFUSE": 0,
+        "TOTAL": 133,
+        "ACC": 0.6015
+    },
+    "college_biology": {
+        "PASS": 46,
+        "UNPASS": 26,
+        "REFUSE": 0,
+        "TOTAL": 72,
+        "ACC": 0.6389
+    },
+    "college_chemistry": {
+        "PASS": 22,
+        "UNPASS": 28,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.44
+    },
+    "college_computer_science": {
+        "PASS": 24,
+        "UNPASS": 26,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.48
+    },
+    "college_mathematics": {
+        "PASS": 14,
+        "UNPASS": 36,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.28
+    },
+    "college_medicine": {
+        "PASS": 43,
+        "UNPASS": 44,
+        "REFUSE": 0,
+        "TOTAL": 87,
+        "ACC": 0.4943
+    },
+    "college_physics": {
+        "PASS": 22,
+        "UNPASS": 29,
+        "REFUSE": 0,
+        "TOTAL": 51,
+        "ACC": 0.4314
+    },
+    "computer_security": {
+        "PASS": 29,
+        "UNPASS": 21,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.58
+    },
+    "conceptual_physics": {
+        "PASS": 58,
+        "UNPASS": 60,
+        "REFUSE": 0,
+        "TOTAL": 118,
+        "ACC": 0.4915
+    },
+    "econometrics": {
+        "PASS": 25,
+        "UNPASS": 32,
+        "REFUSE": 0,
+        "TOTAL": 57,
+        "ACC": 0.4386
+    },
+    "electrical_engineering": {
+        "PASS": 44,
+        "UNPASS": 29,
+        "REFUSE": 0,
+        "TOTAL": 73,
+        "ACC": 0.6027
+    },
+    "elementary_mathematics": {
+        "PASS": 90,
+        "UNPASS": 99,
+        "REFUSE": 0,
+        "TOTAL": 189,
+        "ACC": 0.4762
+    },
+    "formal_logic": {
+        "PASS": 21,
+        "UNPASS": 42,
+        "REFUSE": 0,
+        "TOTAL": 63,
+        "ACC": 0.3333
+    },
+    "global_facts": {
+        "PASS": 14,
+        "UNPASS": 36,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.28
+    },
+    "high_school_biology": {
+        "PASS": 102,
+        "UNPASS": 53,
+        "REFUSE": 0,
+        "TOTAL": 155,
+        "ACC": 0.6581
+    },
+    "high_school_chemistry": {
+        "PASS": 48,
+        "UNPASS": 54,
+        "REFUSE": 0,
+        "TOTAL": 102,
+        "ACC": 0.4706
+    },
+    "high_school_computer_science": {
+        "PASS": 26,
+        "UNPASS": 24,
+        "REFUSE": 0,
+        "TOTAL": 50,
+        "ACC": 0.52
+    },
+    "high_school_european_history": {
+        "PASS": 63,
+        "UNPASS": 20,
+        "REFUSE": 0,
+        "TOTAL": 83,
+        "ACC": 0.759
+    },
+    "high_school_geography": {
+        "PASS": 75,
+        "UNPASS": 24,
+        "REFUSE": 0,
+        "TOTAL": 99,
+        "ACC": 0.7576
+    },
+    "high_school_government_and_politics": {
+        "PASS": 75,
+        "UNPASS": 22,
+        "REFUSE": 0,
+        "TOTAL": 97,
+        "ACC": 0.7732
+    },
+    "high_school_macroeconomics": {
+        "PASS": 100,
+        "UNPASS": 95,
+        "REFUSE": 0,
+        "TOTAL": 195,
+        "ACC": 0.5128
+    },
+    "high_school_mathematics": {
+        "PASS": 55,
+        "UNPASS": 80,
+        "REFUSE": 0,
+        "TOTAL": 135,
+        "ACC": 0.4074
+    },
+    "high_school_microeconomics": {
+        "PASS": 79,
+        "UNPASS": 40,
+        "REFUSE": 0,
+        "TOTAL": 119,
+        "ACC": 0.6639
+    },
+    "high_school_physics": {
+        "PASS": 29,
+        "UNPASS": 47,
+        "REFUSE": 0,
+        "TOTAL": 76,
+        "ACC": 0.3816
+    },
+    "Final_Evaluation": {
+        "Pass": 1293,
+        "UNPASS": 1155,
+        "REFUSE": 0,
+        "Total": 2448,
+        "Accuarcy": 0.5282
+    }
+}
