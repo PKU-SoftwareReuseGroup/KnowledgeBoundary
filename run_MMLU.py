@@ -1,18 +1,39 @@
 # 参考 R-tuning 项目 https://github.com/shizhediao/R-Tuning/
-import torch
 import json
-from tqdm.auto import tqdm
+import os
 import random
 from argparse import ArgumentParser
-from scipy.stats import entropy
-import math
-import os
-import numpy as np
-# 引入自定义变量
-from constants import get_TOKENIZER_and_MODEL
 from sys import exit
 
+import numpy as np
+import torch
+from tqdm.auto import tqdm
+# 引入自定义变量
+from constants import get_TOKENIZER_and_MODEL
+
 choices = ["A", "B", "C", "D"]
+
+
+def format_example(input_list):
+    prompt = input_list[0]
+    k = len(input_list) - 2
+    for j in range(k):
+        prompt += f"\n{choices[j]}. {input_list[j+1]}"
+    prompt += "\nAnswer:"
+    return prompt
+
+
+def format_shots(prompt_data):
+    prompt = ""
+    for data in prompt_data:
+        prompt += data[0]       # fewshot 的 Question
+        k = len(data) - 2       # fewshot 中作为选项的 Answer 的个数
+        for j in range(k):      # 格式化加入 A B C D 四个选项
+            prompt += f"\n{choices[j]}. {data[j+1]}"
+        prompt += "\nAnswer:"
+        prompt += data[k+1] + "\n\n"
+
+    return prompt
 
 
 def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]]):
@@ -25,21 +46,14 @@ def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]])
         prompt_data: prompt.json 在 subject 领域下的内容
     """
     # NOTE 领域介绍
-    prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
+    # prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
+    prompt = ""
     # NOTE fewshot 构建
-    for data in prompt_data:
-        prompt += data[0]       # fewshot 的 Question
-        k = len(data) - 2       # fewshot 中作为选项的 Answer 的个数
-        for j in range(k):      # 格式化加入 A B C D 四个选项
-            prompt += f"\n{choices[j]}. {data[j+1]}"
-        prompt += f"\nAnswer:{data[k+1]}\n\n"
+    prompt += format_shots(prompt_data)
     # NOTE 问题加入
-    prompt += input_list[0]
-    k = len(input_list) - 2
-    for j in range(k):
-        prompt += f"\n{choices[j]}. {input_list[j+1]}"
-    prompt += "\nAnswer:"
+    prompt += format_example(input_list)
     return prompt
+
 
 # Qwen2.5-3B 用完整的 5-shot prompt 无法生成结果，且回答总是先理由再选项。用 1-shot + 指令规范
 def gen_one_shot_prompt(input_list: list[str], subject:str, data: list[str]):
@@ -193,9 +207,9 @@ def inference(
         output_text = f"{tmpList[0]}. {tmpList[1]}"
         # print(output_text)
     
-    elif args.model == "Qwen/Qwen2-1.5B-Instruct":
+    elif args.model == "Qwen/Qwen2-1.5B-Instruct" or args.model == "Qwen/Qwen2.5-3B-Instruct":
         messages = [
-            {"role": "system", "content": f"You are an expert on {s}. You must just choose the answer."},
+            {"role": "system", "content": f"You are an expert on {s}. Just give your answer between A, B, C, D, don't say anything else."},
             {"role": "user", "content": full_input}
         ]
         text = tokenizer.apply_chat_template(
@@ -203,15 +217,44 @@ def inference(
             tokenize=False,
             add_generation_prompt=True
         )
-        model_inputs = tokenizer([text], return_tensors="pt").to(0)
+        model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
 
         outputs = model.generate(
             **model_inputs,
-            max_new_tokens=20,
+            max_new_tokens=10,
+            temperature=0.1,
+            # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
+            # pad_token_id=0,
             output_scores= True,
             return_dict_in_generate=True
         )
 
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, outputs['sequences'])
+        ]
+        response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        # print(response)
+
+        # logits 为模型输出第 1 个 token 的各种可能的 raw 预测分数
+        logits = outputs['scores'][0][0]
+        probs = (
+            torch.nn.functional.softmax(
+                torch.tensor(
+                    [
+                        logits[tokenizer("A").input_ids[0]],
+                        logits[tokenizer("B").input_ids[0]],
+                        logits[tokenizer("C").input_ids[0]],
+                        logits[tokenizer("D").input_ids[0]],
+                    ]
+                ),
+                dim=0,
+            )
+            .detach()
+            .cpu()
+            .numpy()
+        )
+        output_text = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(probs)]
+        return output_text, probs, response
 
 
     return output_text
@@ -223,12 +266,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     # NOTE 训练集默认使用 MMLU_ID_train.json
     parser.add_argument('--dataset', type=str, default="MMLU_ID_train")
-    # NOTE 初始提示符默认使用 MMLU_ID_prompt.json
-    parser.add_argument('--prompt_domain', type=str, default="ID",choices=["ID","OOD"])
+    parser.add_argument('--prompt', type=str, default="ID",choices=["ID","OOD"])
     parser.add_argument('--model', type=str, required=True)
-    # parser.add_argument('--result',type=str, default="MMLU")
-    parser.add_argument('--method',type=str,default="unsure",choices=["unsure","unknown","uncertain"])
-    parser.add_argument("--num_try",type=int,default="5") #only required for uncertain method
     
     args = parser.parse_args()
     
@@ -239,83 +278,134 @@ if __name__ == "__main__":
 
     LMFlow_data = {"type":"text_only","instances":[]}
 
+    # 用于 LMFlow 的微调数据
     training_data = []
-    uncertain_data = []
+    LMFlow_data = {"type":"text_only","instances":[]}
+    # 用于 Llama Factory 的微调数据
+    LlamaFactory_data = []
+    # 用于测试模型知识边界的数据
     data = []
+    # 用于测试模型知识边界的 fewshot 数据
     prompt = []
-    uncertain_data = []
+
+    # 读取数据KnowledgeBoundary/data/C-Eval/5-shots.json
     with open(f"./data/MMLU/{args.dataset}.json",'r') as f:
         data = json.load(f)
-    
-    with open(f"./data/MMLU/MMLU_{args.prompt_domain}_prompt.json",'r') as f:
+    # NOTE 初始提示符默认使用 MMLU_ID_prompt.json
+    with open(f"./data/MMLU/MMLU_{args.prompt}_prompt.json",'r') as f:
         prompt = json.load(f)
     
-    # 这里存放知识边界评估的结果 knowledge_boundary_eval
-    KB_eval = {}
-    MMLU_pass, MMLU_total = 0, 0
+    print(f"🐟MMLU datasets num of domains: {len(data)}")
+
+    # 统计通过率
+    Calcu_PASS = {}
+    TOTAL, PASS = 0, 0
+    # 统计每一个问题的 “正确性”Cor 和 “确定性”Cer
+    CORCER={}
+    texttmp = ""
+    anstmp = ""
+
+    
     # NOTE 遍历 MMLU 的各个领域（MMLU 是一个字典）
-    for i in tqdm(data.keys()):
-        # if i != "college_mathematics":
+    for domain in tqdm(data.keys()):
+        # if domain != "abstract_algebra":
         #     continue
-        KB_eval[i] = {
-            "Pass": 0,
-            "Total": 0,
-            "Accuarcy": 0.0000
+        # 分领域统计
+        Calcu_PASS[domain] = {
+            "PASS": 0,
+            "TOTAL": 0,
+            "ACC": 0.0000
         }
+        CORCER[domain] = {}
+
         # NOTE 各个子领域的 value 是一个 list[list[str]]
         # sample 是 list[str] 的多选题数据：Question, Option1, Option2, Option3, Option4, Answer
-        for sample in tqdm(data[i]):
-        # for sample in tqdm(data[i][1:4]):
-            # NOTE 把 领域名称 中的下划线替换为空格，并在开头加一个空格
-            l = i.split("_")
-            subject = ""
-            for entry in l:
-                subject += " " + entry
-            # NOTE 构建 模型输入文本
-            full_input = ""
-            if args.model != "Qwen/Qwen2.5-3B":
-                full_input = gen_prompt(sample, subject, prompt[i])
-            else:
-                # 选择 第一个 例子 作为 one_shot
-                full_input = gen_one_shot_prompt(sample, subject, prompt[i][0])
+        for sample in tqdm(data[domain]):
+            # 初始化问题的“正确性”和“确定性”
+            CORCER[domain][sample[0]] = {
+                "COR": 0.0000,
+                "CER": 0.0000
+            }
 
-            # NOTE 利用 R-Tuning 论文的 padding 方式评估模型边界，生成训练数据集
-            if args.method == "unsure":
-                output = inference(tokenizer, model, full_input, i)
-                
-                text = f"{full_input}{sample[5]}. Are you sure you accurately answered the question based on your internal knowledge?"
-                if sample[5] in output:
-                    text += " I am sure."
-                    KB_eval[i]["Pass"]+=1
-                    MMLU_pass+=1
-                else:
-                    text += " I am unsure."  
-                
-                training_data.append({"text":text})
-                KB_eval[i]["Total"]+=1
-                MMLU_total+=1
-            else:
-                raise Exception("不支持的方法")
+            full_input = gen_prompt(sample, domain, prompt[domain])
+            output, probs, _ = inference(tokenizer, model, full_input, domain)
             
-        KB_eval[i]["Accuarcy"] = round(KB_eval[i]["Pass"]/KB_eval[i]["Total"], 4)
-        # print(KB_eval[i])
+            text = full_input
+            texttmp = format_example(sample)
+            # 如果模型输出的答案在标准答案中，则认为回答正确
+            if sample[5] in output:
+                anstmp = sample[5]
+                text += f"{sample[5]}."
+                Calcu_PASS[domain]["PASS"] += 1
+                PASS += 1
+                # 统计问题的“正确性”：模型给出 正确回答的概率
+                # NOTE 这里其实就进行了一部分CorCer-RAIT Figure 4(c) 对于左上角 [D1_drop] 的删除，如果模型给出正确答案的概率不是最高，我们记为 0，默认它低于阈值 τ
+                # 这样试图避免 错误集 经过微调 进入正确集，产生动态冲突
+                CORCER[domain][sample[0]]["COR"] = probs[np.argmax(probs)].astype(float)
+            # 否则认为回答错误。
+            # 回答错误，即为不确定unsure，我们希望训练模型拒绝回答，用 N 表示
+            else:
+                text += "N." 
+                anstmp = "N"
 
+            training_data.append({"text": text})
+                
+            LlamaFactory_data.append({
+                "instruction": "Output as N means the knowledge you are not sure about,and output as one of A, B, C, D means the knowledge you are certain about.",
+                "input": texttmp,
+                "output": anstmp
+            })
+
+            # 统计问题的“确定性”，注意将 float32 转化为 float，不然 JSON 不支持
+            # 当存在 0 时 转换为非常小的数字，避免 log(0) 无穷大
+            np_probs = np.array(probs)
+            np_probs = np.where(np_probs == 0, 1e-9, np_probs)
+            log_probs = np.log(np_probs)
+            # 计算交叉熵
+            CORCER[domain][sample[0]]["CER"] = -np.sum(np_probs * log_probs).astype(float)
+
+            if np.isnan(CORCER[domain][sample[0]]["CER"]) or np.isnan(CORCER[domain][sample[0]]["COR"]):
+                print(f"⚠ Error during inference: {CORCER[domain][sample[0]]}\n发生错误的问题是{sample[0]}\n")
+                print(_)
+                print(np_probs)
+                print(log_probs)
+                exit(0)
+            
+            # 统计领域问题数 和 总问题数
+            Calcu_PASS[domain]["TOTAL"] += 1
+            TOTAL += 1
+
+        # 计算领域通过率 
+        Calcu_PASS[domain]["ACC"] = round(Calcu_PASS[domain]["PASS"] / Calcu_PASS[domain]["TOTAL"], 4)
+
+    # exit(0)
+
+    model_name = f"{args.model}".split('/')[-1]
+
+    # 导出 LMFlow 的微调数据
     random.shuffle(training_data)
     LMFlow_data['instances'] = training_data
 
-    model_name = args.model.split("/")[1]
-
     os.makedirs("./training_data", exist_ok=True)
     os.makedirs(f"./training_data/{model_name}", exist_ok=True)
-    with open(f"./training_data/{model_name}/MMLU_{args.method}.json",'w') as f:
-        json.dump(LMFlow_data,f)
+    with open(f"./training_data/{model_name}/MMLU_LMFlow.json",'w') as f:
+        json.dump(LMFlow_data, f)
+    # 导出 Llama Factory 的微调数据
+    with open(f"./training_data/{model_name}/MMLU_LF.json",'w') as f:
+        json.dump(LlamaFactory_data, f)
 
-    KB_eval["Final_Evaluation"] = {
-        "Pass": MMLU_pass,
-        "Total": MMLU_total,
-        "Accuarcy": round(MMLU_pass/MMLU_total, 4)
+    # 导出模型通过率统计结果【知识边界】
+    Calcu_PASS["Final_Evaluation"] = {
+        "Pass": PASS,
+        "Total": TOTAL,
+        "Accuarcy": round(PASS/TOTAL, 4)
     }
     os.makedirs("./2.1_evalution_res", exist_ok=True)
     os.makedirs(f"./2.1_evalution_res/{model_name}", exist_ok=True)
-    with open(f"./2.1_evalution_res/{model_name}/KB_on_MMLU.json", "w") as f:
-        json.dump(KB_eval, f)
+    with open(f"./2.1_evalution_res/{model_name}/MMLU_Pass.json", "w") as f:
+        json.dump(Calcu_PASS, f)
+
+    # 导出问题的“正确性”和“确定性”统计结果
+    with open(f"./2.1_evalution_res/{model_name}/MMLU_CORCER.json", "w") as f:
+        json.dump(CORCER, f)
+

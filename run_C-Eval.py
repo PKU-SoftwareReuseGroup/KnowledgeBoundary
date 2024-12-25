@@ -167,6 +167,7 @@ if __name__ == "__main__":
 
             full_input = gen_prompt(sample, domain, prompt[domain])
             output, probs, _ = inference(tokenizer, model, full_input, domain)
+            
             text = full_input
             texttmp = format_example(sample)
             # 如果模型输出的答案在标准答案中，则认为回答正确
