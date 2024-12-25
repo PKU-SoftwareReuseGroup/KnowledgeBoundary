@@ -74,6 +74,7 @@ def get_TOKENIZER_and_MODEL(model_name: str):
             cache_dir=HF_HOME
         )
 
+    # NOTE 效果比较差
     elif model_name == "Qwen/Qwen2.5-3B":
         tokenizer = AutoTokenizer.from_pretrained(
             "Qwen/Qwen2.5-3B",
@@ -81,6 +82,18 @@ def get_TOKENIZER_and_MODEL(model_name: str):
         )
         model = AutoModelForCausalLM.from_pretrained(
             "Qwen/Qwen2.5-3B",
+            torch_dtype="auto",
+            device_map="auto",
+            cache_dir=HF_HOME
+        )
+
+    elif model_name == "Qwen/Qwen2.5-3B-Instruct":
+        tokenizer = AutoTokenizer.from_pretrained(
+            "Qwen/Qwen2.5-3B-Instruct",
+            cache_dir=HF_HOME
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            "Qwen/Qwen2.5-3B-Instruct",
             torch_dtype="auto",
             device_map="auto",
             cache_dir=HF_HOME

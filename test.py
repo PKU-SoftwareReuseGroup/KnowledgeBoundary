@@ -30,35 +30,46 @@ Please answer the question based on your internal knowledge:
 """
 
 tokenizer = AutoTokenizer.from_pretrained(
-    "Qwen/Qwen2-1.5B-Instruct",
+    "Qwen/Qwen2.5-3B-Instruct",
     cache_dir=HF_HOME
 )
 model = AutoModelForCausalLM.from_pretrained(
-    "Qwen/Qwen2-1.5B-Instruct",
+    "Qwen/Qwen2.5-3B-Instruct",
     torch_dtype="auto",
     device_map="auto",
     cache_dir=HF_HOME
 )
-messages = [
-    {"role": "system", "content": f"You are a Knowledge Q&A expert."},
-    {"role": "user", "content": QA_input},
-]
-text = tokenizer.apply_chat_template(
-    messages,
-    tokenize=False,
-    add_generation_prompt=True,
-)
-model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
-generated_ids = model.generate(
-    **model_inputs,
-    max_new_tokens=32,
-    # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
-    pad_token_id=0
-)
-generated_ids = [ output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids) ]
-response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-print(response.split('.')[0] + ".")
+# tokenizer = AutoTokenizer.from_pretrained(
+#     "Qwen/Qwen2-1.5B-Instruct",
+#     cache_dir=HF_HOME
+# )
+# model = AutoModelForCausalLM.from_pretrained(
+#     "Qwen/Qwen2-1.5B-Instruct",
+#     torch_dtype="auto",
+#     device_map="auto",
+#     cache_dir=HF_HOME
+# )
+# messages = [
+#     {"role": "system", "content": f"You are a Knowledge Q&A expert."},
+#     {"role": "user", "content": QA_input},
+# ]
+# text = tokenizer.apply_chat_template(
+#     messages,
+#     tokenize=False,
+#     add_generation_prompt=True,
+# )
+# model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+# generated_ids = model.generate(
+#     **model_inputs,
+#     max_new_tokens=32,
+#     # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
+#     pad_token_id=0
+# )
+# generated_ids = [ output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids) ]
+# response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+# print(response.split('.')[0] + ".")
 
 # tokenizer = AutoTokenizer.from_pretrained(
 #     "Qwen/Qwen2.5-3B",

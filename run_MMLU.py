@@ -194,7 +194,26 @@ def inference(
         # print(output_text)
     
     elif args.model == "Qwen/Qwen2-1.5B-Instruct":
-    
+        messages = [
+            {"role": "system", "content": f"You are an expert on {s}. You must just choose the answer."},
+            {"role": "user", "content": full_input}
+        ]
+        text = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        model_inputs = tokenizer([text], return_tensors="pt").to(0)
+
+        outputs = model.generate(
+            **model_inputs,
+            max_new_tokens=20,
+            output_scores= True,
+            return_dict_in_generate=True
+        )
+
+
+
     return output_text
 
 

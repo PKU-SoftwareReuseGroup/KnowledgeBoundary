@@ -1,0 +1,267 @@
+{
+    "computer_network": {
+        "PASS": 16,
+        "TOTAL": 19,
+        "ACC": 0.8421
+    },
+    "operating_system": {
+        "PASS": 14,
+        "TOTAL": 19,
+        "ACC": 0.7368
+    },
+    "computer_architecture": {
+        "PASS": 14,
+        "TOTAL": 21,
+        "ACC": 0.6667
+    },
+    "college_programming": {
+        "PASS": 26,
+        "TOTAL": 37,
+        "ACC": 0.7027
+    },
+    "college_physics": {
+        "PASS": 8,
+        "TOTAL": 19,
+        "ACC": 0.4211
+    },
+    "college_chemistry": {
+        "PASS": 13,
+        "TOTAL": 24,
+        "ACC": 0.5417
+    },
+    "advanced_mathematics": {
+        "PASS": 7,
+        "TOTAL": 19,
+        "ACC": 0.3684
+    },
+    "probability_and_statistics": {
+        "PASS": 6,
+        "TOTAL": 18,
+        "ACC": 0.3333
+    },
+    "discrete_mathematics": {
+        "PASS": 7,
+        "TOTAL": 16,
+        "ACC": 0.4375
+    },
+    "electrical_engineer": {
+        "PASS": 20,
+        "TOTAL": 37,
+        "ACC": 0.5405
+    },
+    "metrology_engineer": {
+        "PASS": 19,
+        "TOTAL": 24,
+        "ACC": 0.7917
+    },
+    "high_school_mathematics": {
+        "PASS": 5,
+        "TOTAL": 18,
+        "ACC": 0.2778
+    },
+    "high_school_physics": {
+        "PASS": 15,
+        "TOTAL": 19,
+        "ACC": 0.7895
+    },
+    "high_school_chemistry": {
+        "PASS": 12,
+        "TOTAL": 19,
+        "ACC": 0.6316
+    },
+    "high_school_biology": {
+        "PASS": 15,
+        "TOTAL": 19,
+        "ACC": 0.7895
+    },
+    "middle_school_mathematics": {
+        "PASS": 11,
+        "TOTAL": 19,
+        "ACC": 0.5789
+    },
+    "middle_school_biology": {
+        "PASS": 20,
+        "TOTAL": 21,
+        "ACC": 0.9524
+    },
+    "middle_school_physics": {
+        "PASS": 18,
+        "TOTAL": 19,
+        "ACC": 0.9474
+    },
+    "middle_school_chemistry": {
+        "PASS": 19,
+        "TOTAL": 20,
+        "ACC": 0.95
+    },
+    "veterinary_medicine": {
+        "PASS": 18,
+        "TOTAL": 23,
+        "ACC": 0.7826
+    },
+    "college_economics": {
+        "PASS": 34,
+        "TOTAL": 55,
+        "ACC": 0.6182
+    },
+    "business_administration": {
+        "PASS": 27,
+        "TOTAL": 33,
+        "ACC": 0.8182
+    },
+    "marxism": {
+        "PASS": 18,
+        "TOTAL": 19,
+        "ACC": 0.9474
+    },
+    "mao_zedong_thought": {
+        "PASS": 21,
+        "TOTAL": 24,
+        "ACC": 0.875
+    },
+    "education_science": {
+        "PASS": 27,
+        "TOTAL": 29,
+        "ACC": 0.931
+    },
+    "teacher_qualification": {
+        "PASS": 40,
+        "TOTAL": 44,
+        "ACC": 0.9091
+    },
+    "high_school_politics": {
+        "PASS": 18,
+        "TOTAL": 19,
+        "ACC": 0.9474
+    },
+    "high_school_geography": {
+        "PASS": 16,
+        "TOTAL": 19,
+        "ACC": 0.8421
+    },
+    "middle_school_politics": {
+        "PASS": 19,
+        "TOTAL": 21,
+        "ACC": 0.9048
+    },
+    "middle_school_geography": {
+        "PASS": 10,
+        "TOTAL": 12,
+        "ACC": 0.8333
+    },
+    "modern_chinese_history": {
+        "PASS": 21,
+        "TOTAL": 23,
+        "ACC": 0.913
+    },
+    "ideological_and_moral_cultivation": {
+        "PASS": 18,
+        "TOTAL": 19,
+        "ACC": 0.9474
+    },
+    "logic": {
+        "PASS": 13,
+        "TOTAL": 22,
+        "ACC": 0.5909
+    },
+    "law": {
+        "PASS": 14,
+        "TOTAL": 24,
+        "ACC": 0.5833
+    },
+    "chinese_language_and_literature": {
+        "PASS": 10,
+        "TOTAL": 23,
+        "ACC": 0.4348
+    },
+    "art_studies": {
+        "PASS": 27,
+        "TOTAL": 33,
+        "ACC": 0.8182
+    },
+    "professional_tour_guide": {
+        "PASS": 25,
+        "TOTAL": 29,
+        "ACC": 0.8621
+    },
+    "legal_professional": {
+        "PASS": 16,
+        "TOTAL": 23,
+        "ACC": 0.6957
+    },
+    "high_school_chinese": {
+        "PASS": 8,
+        "TOTAL": 19,
+        "ACC": 0.4211
+    },
+    "high_school_history": {
+        "PASS": 17,
+        "TOTAL": 20,
+        "ACC": 0.85
+    },
+    "middle_school_history": {
+        "PASS": 21,
+        "TOTAL": 22,
+        "ACC": 0.9545
+    },
+    "civil_servant": {
+        "PASS": 34,
+        "TOTAL": 47,
+        "ACC": 0.7234
+    },
+    "sports_science": {
+        "PASS": 14,
+        "TOTAL": 19,
+        "ACC": 0.7368
+    },
+    "plant_protection": {
+        "PASS": 17,
+        "TOTAL": 22,
+        "ACC": 0.7727
+    },
+    "basic_medicine": {
+        "PASS": 16,
+        "TOTAL": 19,
+        "ACC": 0.8421
+    },
+    "clinical_medicine": {
+        "PASS": 13,
+        "TOTAL": 22,
+        "ACC": 0.5909
+    },
+    "urban_and_rural_planner": {
+        "PASS": 33,
+        "TOTAL": 46,
+        "ACC": 0.7174
+    },
+    "accountant": {
+        "PASS": 32,
+        "TOTAL": 49,
+        "ACC": 0.6531
+    },
+    "fire_engineer": {
+        "PASS": 21,
+        "TOTAL": 31,
+        "ACC": 0.6774
+    },
+    "environmental_impact_assessment_engineer": {
+        "PASS": 23,
+        "TOTAL": 31,
+        "ACC": 0.7419
+    },
+    "tax_accountant": {
+        "PASS": 35,
+        "TOTAL": 49,
+        "ACC": 0.7143
+    },
+    "physician": {
+        "PASS": 30,
+        "TOTAL": 49,
+        "ACC": 0.6122
+    },
+    "Final_Evaluation": {
+        "Pass": 971,
+        "Total": 1346,
+        "Accuarcy": 0.7214
+    }
+}

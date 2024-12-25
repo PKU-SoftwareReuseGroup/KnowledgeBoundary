@@ -198,7 +198,7 @@ if __name__ == "__main__":
                 TOTAL+=1
 
 
-            Calcu_PASS[domain]["ACC"] = round(Calcu_PASS[domain]["PASS"]/Calcu_PASS[domain]["TOTAL"], 4)
+        Calcu_PASS[domain]["ACC"] = round(Calcu_PASS[domain]["PASS"]/Calcu_PASS[domain]["TOTAL"], 4)
     random.shuffle(training_data)
     
     LMFlow_data['instances'] = training_data
