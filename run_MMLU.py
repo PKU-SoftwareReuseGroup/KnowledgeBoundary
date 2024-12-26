@@ -114,7 +114,6 @@ def inference(
         # print(tokenizer.decode(outputs['sequences'][0][length:]))
         # logits 是模型输出的对每个可能的 token 的原始分数，通常是一个向量，表示所有词汇表中每个 token 的 "raw" 预测得分
         logits = outputs['scores'][0][0]    #The first token
-        # print(logits)
         # print(logits[tokenizer("A").input_ids[0]])
         # probs 是一个包含四个选项 A、B、C、D 对应的概率分布。包含四个浮点数的数组
         probs = (
@@ -145,9 +144,9 @@ def inference(
         # chatglm2-6b 的回复一般是 [选项]'.' [选项内容]. [理由]
         output_text = response.split('.')[0]
 
+    # NOTE Qwen/Qwen-7B 效果不佳，仅在 2.1 知识边界中使用，不生成微调数据
     elif args.model == "Qwen/Qwen-7B":
         inputs = tokenizer(full_input,return_tensors="pt").to(0)
-        # print(inputs.keys())
         outputs = model.generate(
                 # 这里展开了 'input_ids' 'attention_mask' 等信息
                 **inputs,
@@ -155,11 +154,8 @@ def inference(
                 output_scores = True,   # 输出模型生成的每个 token 的分数（logits）
                 return_dict_in_generate=True    # 以字典形式返回生成的输出，其中包括生成的 tokens 和 logits
             )
-        # print(outputs.keys())
-        # print(outputs['sequences'])
         # print(tokenizer.decode(outputs['sequences'][0][length:]))
         logits = outputs['scores'][0][0]
-        # print(logits[tokenizer("A").input_ids[0]])
         probs = (
             torch.nn.functional.softmax(
                 # 对 logits 进行 softmax 转换，将 logits 转化为概率分布，
@@ -173,7 +169,7 @@ def inference(
                         logits[tokenizer("C").input_ids[0]],
                         logits[tokenizer("D").input_ids[0]],
                     ],
-                    # NOTE Qwen 的向量格式是 bf16，需要转换
+                    # NOTE Qwen/Qwen-7B 的向量格式是 bf16，需要转换
                     dtype=torch.float32
                 ),
                 dim=0,
@@ -181,7 +177,6 @@ def inference(
             # 将 PyTorch 的 tensor 转换为 NumPy 数组，并确保不会有梯度计算（detach），并将其从 GPU 移动到 CPU 上
             .detach().cpu().numpy()
         )
-        # print(probs)
         # 取概率最大的作为索引，映射到字母作为 推理输出
         output_text = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(probs)]
     
@@ -226,8 +221,6 @@ def inference(
             **model_inputs,
             max_new_tokens=10,
             temperature=0.1,
-            # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
-            # pad_token_id=0,
             output_scores= True,
             return_dict_in_generate=True
         )
