@@ -40,42 +40,24 @@ def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]])
     """ 基于 MMLU 数据生成 prompt
     这个 prompt 是针对 “如果模型还没有被调成一个 chatbot” 的情况。所以不应该加入 指令性语句
     而是以 fewshots 的形式让模型进行 text completion/genertion
+    但是 `Qwen/Qwen2.5-3B` 模型需要额外的指令
+    
     Params:
         input_text: MMLU 的多选题数据 Question, Option1, Option2, Option3, Option4, Answer
         subject: MMLU 的 key——领域名称
         prompt_data: prompt.json 在 subject 领域下的内容
     """
     # NOTE 领域介绍
-    # prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
-    if args.model == "Qwen/Qwen2.5-3B":
-        prompt = f"The following are multiple choice questions (with answers) about {subject}. You should give a letter between A, B, C, D after colon. **Don't say anything else.** \n\n"
-    else:
-        prompt = ""
+    prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
     # NOTE fewshot 构建
     prompt += format_shots(prompt_data)
     # NOTE 问题加入
+    if args.model == "Qwen/Qwen2.5-3B":
+        prompt += "\nNow here is a question for you:\n"
     prompt += format_example(input_list)
-    return prompt
-
-
-# Qwen2.5-3B 用完整的 5-shot prompt 无法生成结果，且回答总是先理由再选项。用 1-shot + 指令规范
-def gen_one_shot_prompt(input_list: list[str], subject:str, data: list[str]):
-    # NOTE 领域介绍
-    prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
-    # NOTE oneshot 构建，这里固定先回答选项，再回答其他
-    prompt += data[0]
-    k = len(data) - 2
-    for j in range(k):
-        prompt += f"\n{choices[j]}. {data[j+1]}"
-    prompt += f"\nAnswer: {data[k+1]}.\n\n"
-    # NOTE 模型求解问题构建，我这里加入了指导性语句
-    prompt += "Now, there is a question for you: \n"
-    prompt += input_list[0]
-    k = len(input_list) - 2
-    for j in range(k):
-        prompt += f"\n{choices[j]}. {input_list[j+1]}"
-
-    prompt += "\nYour task: Firstly, choose the correct answer from options A, B, C, and D. Secondly, give reasons.\n"
+    # NOTE "Qwen/Qwen2.5-3B" 模型需要额外的指令
+    if args.model == "Qwen/Qwen2.5-3B":
+        prompt += "\nGive me the correct option in form <Answer: [option].> where option is A or B or C or D.\n"
     return prompt
 
 
@@ -158,12 +140,8 @@ def inference(
         logits = outputs['scores'][0][0]
         probs = (
             torch.nn.functional.softmax(
-                # 对 logits 进行 softmax 转换，将 logits 转化为概率分布，
-                # dim=0 表示在第一个维度上应用 softmax，即对所有选项的 logits 进行归一化
                 torch.tensor(
                     [
-                        # tokenizer 将每个选项 转化为对应的 token ID
-                        # 通过索引获取给定选项（A、B、C、D）对应的 logits 分数。
                         logits[tokenizer("A").input_ids[0]],
                         logits[tokenizer("B").input_ids[0]],
                         logits[tokenizer("C").input_ids[0]],
@@ -174,16 +152,13 @@ def inference(
                 ),
                 dim=0,
             )
-            # 将 PyTorch 的 tensor 转换为 NumPy 数组，并确保不会有梯度计算（detach），并将其从 GPU 移动到 CPU 上
             .detach().cpu().numpy()
         )
-        # 取概率最大的作为索引，映射到字母作为 推理输出
         output_text = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(probs)]
     
     elif args.model == "Qwen/Qwen2.5-3B":
-        # FIXME 注意这里 Qwen2.5-3B 用的 prompt 和其他模型不一致
         messages = [
-            {"role": "system", "content": f"You are an expert on{s}. You must answer me first and then give me your reasons."},
+            {"role": "system", "content": f"You are an expert on{s}."},
             {"role": "user", "content": full_input},
         ]
         text = tokenizer.apply_chat_template(
@@ -194,15 +169,18 @@ def inference(
         model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
         generated_ids = model.generate(
             **model_inputs,
-            max_new_tokens=512,
+            max_new_tokens=16,
             # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
-            pad_token_id=0
+            pad_token_id=151643
         )
-        generated_ids = [ output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids) ]
+        generated_ids = [
+            output_ids[len(input_ids):] 
+            for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
         response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        # print(response)
-        tmpList = response.split('.')
-        output_text = f"{tmpList[0]}. {tmpList[1]}"
+        response += "."
+        # Qwen/Qwen2.5-3B 实在是没办法直接输出字母，只能通过字符截断
+        output_text = response.split('.')[0]
         # print(output_text)
     
     elif args.model == "Qwen/Qwen2-1.5B-Instruct" or args.model == "Qwen/Qwen2.5-3B-Instruct":
@@ -270,7 +248,6 @@ if __name__ == "__main__":
     tokenizer, model = get_TOKENIZER_and_MODEL(args.model)
 
     # print(f"================模型设备检查: {model.device}================")
-    # exit(0)
 
     # 用于 LMFlow 的微调数据
     training_data = []
@@ -289,7 +266,7 @@ if __name__ == "__main__":
     with open(f"./data/MMLU/MMLU_{args.prompt}_prompt.json",'r') as f:
         prompt = json.load(f)
     
-    print(f"🐟MMLU datasets num of domains: {len(data)}")
+    print(f"🐟{args.dataset} datasets num of domains: {len(data)}")
 
     # 统计通过率
     Calcu_PASS = {}
