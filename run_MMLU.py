@@ -47,7 +47,10 @@ def gen_prompt(input_list: list[str], subject:str, prompt_data: list[list[str]])
     """
     # NOTE 领域介绍
     # prompt = f"The following are multiple choice questions (with answers) about{subject}.\n\n"
-    prompt = ""
+    if args.model == "Qwen/Qwen2.5-3B":
+        prompt = f"The following are multiple choice questions (with answers) about {subject}. You should give a letter between A, B, C, D after colon. **Don't say anything else.** \n\n"
+    else:
+        prompt = ""
     # NOTE fewshot 构建
     prompt += format_shots(prompt_data)
     # NOTE 问题加入
@@ -305,6 +308,8 @@ if __name__ == "__main__":
     texttmp = ""
     anstmp = ""
 
+    # 是否生成微调数据（这里只对一部分模型生成，以供后续 2.2.1 和 2.2.2 训练）
+    FINETUNING_DATA_FLAG = True
     
     # NOTE 遍历 MMLU 的各个领域（MMLU 是一个字典）
     for domain in tqdm(data.keys()):
@@ -321,6 +326,7 @@ if __name__ == "__main__":
         # NOTE 各个子领域的 value 是一个 list[list[str]]
         # sample 是 list[str] 的多选题数据：Question, Option1, Option2, Option3, Option4, Answer
         for sample in tqdm(data[domain]):
+        # for sample in data[domain][:5]:
             # 初始化问题的“正确性”和“确定性”
             CORCER[domain][sample[0]] = {
                 "COR": 0.0000,
@@ -328,49 +334,48 @@ if __name__ == "__main__":
             }
 
             full_input = gen_prompt(sample, domain, prompt[domain])
-            output, probs, _ = inference(tokenizer, model, full_input, domain)
+
+            if FINETUNING_DATA_FLAG:
+                output, probs, _ = inference(tokenizer, model, full_input, domain)
+                text = full_input
+                texttmp = format_example(sample)
+                # 如果模型输出的答案在标准答案中，则认为回答正确
+                if sample[5] in output:
+                    anstmp = sample[5]
+                    text += f"{sample[5]}."
+                    Calcu_PASS[domain]["PASS"] += 1
+                    PASS += 1
+                    CORCER[domain][sample[0]]["COR"] = probs[np.argmax(probs)].astype(float)
+                # 否则认为回答错误。
+                # 回答错误，即为不确定unsure，我们希望训练模型拒绝回答，用 N 表示
+                else:
+                    text += "N." 
+                    anstmp = "N"
+
+                training_data.append({"text": text})
+                    
+                LlamaFactory_data.append({
+                    "instruction": "Output as N means the knowledge you are not sure about,and output as one of A, B, C, D means the knowledge you are certain about.",
+                    "input": texttmp,
+                    "output": anstmp
+                })
+
+                # 统计问题的“确定性”，注意将 float32 转化为 float，不然 JSON 不支持
+                # 当存在 0 时 转换为非常小的数字，避免 log(0) 无穷大
+                np_probs = np.array(probs)
+                np_probs = np.where(np_probs == 0, 1e-9, np_probs)
+                log_probs = np.log(np_probs)
+                # 计算交叉熵
+                CORCER[domain][sample[0]]["CER"] = -np.sum(np_probs * log_probs).astype(float)
             
-            text = full_input
-            texttmp = format_example(sample)
-            # 如果模型输出的答案在标准答案中，则认为回答正确
-            if sample[5] in output:
-                anstmp = sample[5]
-                text += f"{sample[5]}."
-                Calcu_PASS[domain]["PASS"] += 1
-                PASS += 1
-                # 统计问题的“正确性”：模型给出 正确回答的概率
-                # NOTE 这里其实就进行了一部分CorCer-RAIT Figure 4(c) 对于左上角 [D1_drop] 的删除，如果模型给出正确答案的概率不是最高，我们记为 0，默认它低于阈值 τ
-                # 这样试图避免 错误集 经过微调 进入正确集，产生动态冲突
-                CORCER[domain][sample[0]]["COR"] = probs[np.argmax(probs)].astype(float)
-            # 否则认为回答错误。
-            # 回答错误，即为不确定unsure，我们希望训练模型拒绝回答，用 N 表示
             else:
-                text += "N." 
-                anstmp = "N"
+                output = inference(tokenizer, model, full_input, domain)
+                if sample[5] in output:
+                    Calcu_PASS[domain]["PASS"] += 1
+                    PASS += 1
+                else:
+                    pass
 
-            training_data.append({"text": text})
-                
-            LlamaFactory_data.append({
-                "instruction": "Output as N means the knowledge you are not sure about,and output as one of A, B, C, D means the knowledge you are certain about.",
-                "input": texttmp,
-                "output": anstmp
-            })
-
-            # 统计问题的“确定性”，注意将 float32 转化为 float，不然 JSON 不支持
-            # 当存在 0 时 转换为非常小的数字，避免 log(0) 无穷大
-            np_probs = np.array(probs)
-            np_probs = np.where(np_probs == 0, 1e-9, np_probs)
-            log_probs = np.log(np_probs)
-            # 计算交叉熵
-            CORCER[domain][sample[0]]["CER"] = -np.sum(np_probs * log_probs).astype(float)
-
-            if np.isnan(CORCER[domain][sample[0]]["CER"]) or np.isnan(CORCER[domain][sample[0]]["COR"]):
-                print(f"⚠ Error during inference: {CORCER[domain][sample[0]]}\n发生错误的问题是{sample[0]}\n")
-                print(_)
-                print(np_probs)
-                print(log_probs)
-                exit(0)
-            
             # 统计领域问题数 和 总问题数
             Calcu_PASS[domain]["TOTAL"] += 1
             TOTAL += 1
@@ -382,17 +387,22 @@ if __name__ == "__main__":
 
     model_name = f"{args.model}".split('/')[-1]
 
-    # 导出 LMFlow 的微调数据
-    random.shuffle(training_data)
-    LMFlow_data['instances'] = training_data
+    if FINETUNING_DATA_FLAG:
+        # 导出 LMFlow 的微调数据
+        random.shuffle(training_data)
+        LMFlow_data['instances'] = training_data
 
-    os.makedirs("./training_data", exist_ok=True)
-    os.makedirs(f"./training_data/{model_name}", exist_ok=True)
-    with open(f"./training_data/{model_name}/MMLU_LMFlow.json",'w') as f:
-        json.dump(LMFlow_data, f)
-    # 导出 Llama Factory 的微调数据
-    with open(f"./training_data/{model_name}/MMLU_LF.json",'w') as f:
-        json.dump(LlamaFactory_data, f)
+        os.makedirs("./training_data", exist_ok=True)
+        os.makedirs(f"./training_data/{model_name}", exist_ok=True)
+        with open(f"./training_data/{model_name}/MMLU_LMFlow.json",'w') as f:
+            json.dump(LMFlow_data, f)
+        # 导出 Llama Factory 的微调数据
+        with open(f"./training_data/{model_name}/MMLU_LF.json",'w') as f:
+            json.dump(LlamaFactory_data, f)
+
+        # 导出问题的“正确性”和“确定性”统计结果
+        with open(f"./2.1_evalution_res/{model_name}/MMLU_CORCER.json", "w") as f:
+            json.dump(CORCER, f)
 
     # 导出模型通过率统计结果【知识边界】
     Calcu_PASS["Final_Evaluation"] = {
@@ -405,7 +415,4 @@ if __name__ == "__main__":
     with open(f"./2.1_evalution_res/{model_name}/MMLU_Pass.json", "w") as f:
         json.dump(Calcu_PASS, f)
 
-    # 导出问题的“正确性”和“确定性”统计结果
-    with open(f"./2.1_evalution_res/{model_name}/MMLU_CORCER.json", "w") as f:
-        json.dump(CORCER, f)
 
