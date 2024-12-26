@@ -1,0 +1,205 @@
+{
+  "abstract_algebra": {
+    "PASS": 8,
+    "UNPASS": 7,
+    "REFUSE": 35,
+    "TOTAL": 50,
+    "ACC": 0.16
+  },
+  "anatomy": {
+    "PASS": 37,
+    "UNPASS": 31,
+    "REFUSE": 0,
+    "TOTAL": 68,
+    "ACC": 0.5441
+  },
+  "astronomy": {
+    "PASS": 36,
+    "UNPASS": 38,
+    "REFUSE": 2,
+    "TOTAL": 76,
+    "ACC": 0.4737
+  },
+  "business_ethics": {
+    "PASS": 27,
+    "UNPASS": 20,
+    "REFUSE": 3,
+    "TOTAL": 50,
+    "ACC": 0.54
+  },
+  "clinical_knowledge": {
+    "PASS": 84,
+    "UNPASS": 48,
+    "REFUSE": 1,
+    "TOTAL": 133,
+    "ACC": 0.6316
+  },
+  "college_biology": {
+    "PASS": 44,
+    "UNPASS": 27,
+    "REFUSE": 1,
+    "TOTAL": 72,
+    "ACC": 0.6111
+  },
+  "college_chemistry": {
+    "PASS": 17,
+    "UNPASS": 13,
+    "REFUSE": 20,
+    "TOTAL": 50,
+    "ACC": 0.34
+  },
+  "college_computer_science": {
+    "PASS": 18,
+    "UNPASS": 19,
+    "REFUSE": 13,
+    "TOTAL": 50,
+    "ACC": 0.36
+  },
+  "college_mathematics": {
+    "PASS": 6,
+    "UNPASS": 13,
+    "REFUSE": 31,
+    "TOTAL": 50,
+    "ACC": 0.12
+  },
+  "college_medicine": {
+    "PASS": 44,
+    "UNPASS": 40,
+    "REFUSE": 3,
+    "TOTAL": 87,
+    "ACC": 0.5057
+  },
+  "college_physics": {
+    "PASS": 11,
+    "UNPASS": 22,
+    "REFUSE": 18,
+    "TOTAL": 51,
+    "ACC": 0.2157
+  },
+  "computer_security": {
+    "PASS": 29,
+    "UNPASS": 17,
+    "REFUSE": 4,
+    "TOTAL": 50,
+    "ACC": 0.58
+  },
+  "conceptual_physics": {
+    "PASS": 51,
+    "UNPASS": 58,
+    "REFUSE": 9,
+    "TOTAL": 118,
+    "ACC": 0.4322
+  },
+  "econometrics": {
+    "PASS": 20,
+    "UNPASS": 27,
+    "REFUSE": 10,
+    "TOTAL": 57,
+    "ACC": 0.3509
+  },
+  "electrical_engineering": {
+    "PASS": 41,
+    "UNPASS": 24,
+    "REFUSE": 8,
+    "TOTAL": 73,
+    "ACC": 0.5616
+  },
+  "elementary_mathematics": {
+    "PASS": 43,
+    "UNPASS": 61,
+    "REFUSE": 85,
+    "TOTAL": 189,
+    "ACC": 0.2275
+  },
+  "formal_logic": {
+    "PASS": 16,
+    "UNPASS": 32,
+    "REFUSE": 15,
+    "TOTAL": 63,
+    "ACC": 0.254
+  },
+  "global_facts": {
+    "PASS": 13,
+    "UNPASS": 19,
+    "REFUSE": 18,
+    "TOTAL": 50,
+    "ACC": 0.26
+  },
+  "high_school_biology": {
+    "PASS": 107,
+    "UNPASS": 44,
+    "REFUSE": 4,
+    "TOTAL": 155,
+    "ACC": 0.6903
+  },
+  "high_school_chemistry": {
+    "PASS": 43,
+    "UNPASS": 33,
+    "REFUSE": 26,
+    "TOTAL": 102,
+    "ACC": 0.4216
+  },
+  "high_school_computer_science": {
+    "PASS": 19,
+    "UNPASS": 17,
+    "REFUSE": 14,
+    "TOTAL": 50,
+    "ACC": 0.38
+  },
+  "high_school_european_history": {
+    "PASS": 64,
+    "UNPASS": 18,
+    "REFUSE": 1,
+    "TOTAL": 83,
+    "ACC": 0.7711
+  },
+  "high_school_geography": {
+    "PASS": 77,
+    "UNPASS": 21,
+    "REFUSE": 1,
+    "TOTAL": 99,
+    "ACC": 0.7778
+  },
+  "high_school_government_and_politics": {
+    "PASS": 73,
+    "UNPASS": 24,
+    "REFUSE": 0,
+    "TOTAL": 97,
+    "ACC": 0.7526
+  },
+  "high_school_macroeconomics": {
+    "PASS": 100,
+    "UNPASS": 81,
+    "REFUSE": 14,
+    "TOTAL": 195,
+    "ACC": 0.5128
+  },
+  "high_school_mathematics": {
+    "PASS": 29,
+    "UNPASS": 54,
+    "REFUSE": 52,
+    "TOTAL": 135,
+    "ACC": 0.2148
+  },
+  "high_school_microeconomics": {
+    "PASS": 68,
+    "UNPASS": 35,
+    "REFUSE": 16,
+    "TOTAL": 119,
+    "ACC": 0.5714
+  },
+  "high_school_physics": {
+    "PASS": 14,
+    "UNPASS": 31,
+    "REFUSE": 31,
+    "TOTAL": 76,
+    "ACC": 0.1842
+  },
+  "Final_Evaluation": {
+    "Pass": 1139,
+    "UNPASS": 874,
+    "REFUSE": 435,
+    "Total": 2448,
+    "Accuarcy": 0.4653
+  }
+}
