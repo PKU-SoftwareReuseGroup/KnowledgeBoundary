@@ -103,9 +103,54 @@ def inference(tokenizer, model, full_input, subject):
             .cpu()
             .numpy()
         )
+        
+        # print(probs)
         output_text = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(probs)]
         return output_text, probs, response
 
+    elif args.model == "THUDM/chatglm2-6b":
+        # response, history = model.chat(tokenizer, full_input, history=[])
+        # output_text = response.split('.')[0] + "."
+
+        role = f"You are an expert on {subject}. Give your answer between A, B, C, D, and give your reason.\n"
+        model_inputs = tokenizer(role + full_input, return_tensors="pt").to('cuda')
+        outputs = model.generate(
+            **model_inputs,
+            max_new_tokens=32,
+            # temperature=0.1,
+            # FIXME 显式指定 pad_token 避免控制台显示 Setting pad_token_id to eos_token_id:151643 for open-end generation
+            # pad_token_id=0,
+            output_scores= True,
+            return_dict_in_generate=True
+        )
+        # print(outputs.keys())
+        # odict_keys(['sequences', 'scores', 'past_key_values'])
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, outputs['sequences'])
+        ]
+        response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        print(response)
+         # logits 为模型输出第 1 个 token 的各种可能的 raw 预测分数
+        logits = outputs['scores'][0][0]
+        probs = (
+            torch.nn.functional.softmax(
+                torch.tensor(
+                    [
+                        logits[tokenizer("A").input_ids[0]],
+                        logits[tokenizer("B").input_ids[0]],
+                        logits[tokenizer("C").input_ids[0]],
+                        logits[tokenizer("D").input_ids[0]],
+                    ]
+                ),
+                dim=0,
+            )
+            .detach()
+            .cpu()
+            .numpy()
+        )
+        output_text = {0: "A", 1: "B", 2: "C", 3: "D"}[np.argmax(probs)]
+        print(probs)
+        return output_text, probs, response
     raise NotImplementedError(f"Model {args.model} not supported for inference.")
 
 
@@ -159,6 +204,7 @@ if __name__ == "__main__":
         CORCER[domain] = {}
 
         for sample in tqdm(data[domain]):
+        # for sample in data[domain][:5]:
             # 初始化问题的“正确性”和“确定性”
             CORCER[domain][sample[0]] = {
                 "COR": 0.0000,

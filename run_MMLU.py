@@ -279,8 +279,6 @@ if __name__ == "__main__":
     # print(f"================模型设备检查: {model.device}================")
     # exit(0)
 
-    LMFlow_data = {"type":"text_only","instances":[]}
-
     # 用于 LMFlow 的微调数据
     training_data = []
     LMFlow_data = {"type":"text_only","instances":[]}
@@ -335,8 +333,13 @@ if __name__ == "__main__":
 
             full_input = gen_prompt(sample, domain, prompt[domain])
 
-            if FINETUNING_DATA_FLAG:
+            if args.model == "Qwen/Qwen2-1.5B-Instruct" or args.model == "Qwen/Qwen2.5-3B-Instruct":
                 output, probs, _ = inference(tokenizer, model, full_input, domain)
+            else:
+                output = inference(tokenizer, model, full_input, domain)
+
+            # 目前只对 Qwen/Qwen2-1.5B-Instruct 和 Qwen/Qwen2.5-3B-Instruct 生成微调数据
+            if FINETUNING_DATA_FLAG:
                 text = full_input
                 texttmp = format_example(sample)
                 # 如果模型输出的答案在标准答案中，则认为回答正确
@@ -369,7 +372,6 @@ if __name__ == "__main__":
                 CORCER[domain][sample[0]]["CER"] = -np.sum(np_probs * log_probs).astype(float)
             
             else:
-                output = inference(tokenizer, model, full_input, domain)
                 if sample[5] in output:
                     Calcu_PASS[domain]["PASS"] += 1
                     PASS += 1
@@ -412,7 +414,8 @@ if __name__ == "__main__":
     }
     os.makedirs("./2.1_evalution_res", exist_ok=True)
     os.makedirs(f"./2.1_evalution_res/{model_name}", exist_ok=True)
-    with open(f"./2.1_evalution_res/{model_name}/MMLU_Pass.json", "w") as f:
+    # NOTE 因为 MMLU 有 in domain 和 OOD ，所以这里需要区分 
+    with open(f"./2.1_evalution_res/{model_name}/{args.dataset}_Pass.json", "w") as f:
         json.dump(Calcu_PASS, f)
 
 

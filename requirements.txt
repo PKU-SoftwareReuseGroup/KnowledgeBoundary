@@ -10,4 +10,5 @@ Jinja2==3.0.2
 
 
 zhipuai  # 2.1.5.20241204
-
+# 仅用作绘图
+matplotlib
