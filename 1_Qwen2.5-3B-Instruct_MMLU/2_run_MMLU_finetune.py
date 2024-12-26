@@ -44,14 +44,7 @@ def format_shots(prompt_data):
 
 
 def gen_prompt(input_list,subject,prompt_data):
-    # prompt = "The following are multiple choice questions (with answers) about {}.\n\n".format(
-    #     format_subject(subject)
-    # )
-    
-    #prompt += format_shots(prompt_data)
-    
     prompt = format_example(input_list)
-    
     return prompt
 
 def inference(tokenizer,model,input_text,subject,prompt_data):
@@ -60,7 +53,7 @@ def inference(tokenizer,model,input_text,subject,prompt_data):
     
     messages = [
         # {"role": "system", "content": f"If you know what the answer is, just print the answer, not the content of the answer.If you're not sure about the generated answer or you don't know how to answer the question, output: N."},
-        {"role": "system", "content": f"You are an expert on {subject}."},
+        {"role": "system", "content": f"You are an expert on {subject}. Just give your answerbetween A,B,C,D, don't say anything else."},
         {"role": "user", "content": full_input}
     ]
 
@@ -76,7 +69,8 @@ def inference(tokenizer,model,input_text,subject,prompt_data):
         **model_inputs,
         max_new_tokens=1,
         output_scores= True,
-        return_dict_in_generate=True
+        return_dict_in_generate=True,
+        temperature = 0.1
     )
     
     generated_ids = [
@@ -105,7 +99,6 @@ def inference(tokenizer,model,input_text,subject,prompt_data):
         .cpu()
         .numpy()
     )
-    
     output_text = {0: "A", 1: "B", 2: "C", 3: "D", 4: "N"}[np.argmax(probs)]
     return output_text, full_input,probs
 
@@ -114,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', type=str, default=DATASET)
     parser.add_argument('--prompt_domain', type=str, default="ID",choices=["ID","OOD"])
     parser.add_argument('--model', type=str, default=MODELPATH)
-    parser.add_argument('--result',type=str, default="CEval")
+    parser.add_argument('--result',type=str, default="MMLU")
     parser.add_argument('--method',type=str,default="unsure",choices=["unsure","unknown","uncertain"])
     parser.add_argument("--num_try",type=int,default="5") #only required for uncertain method
     
@@ -136,12 +129,12 @@ if __name__ == "__main__":
     data = []
     prompt = []
     uncertain_data = []
-   
-    with open(DATASET,'r') as f:
+    with open(f"{args.dataset}",'r') as f:
         data = json.load(f)
     
-    with open(f"/data/data_public/breeze/KnowledgeBoundary/data/MMLU/MMLU_ID_prompt.json",'r') as f:
-        prompt = json.load(f)    
+    with open(f"../data/MMLU/MMLU_{args.prompt_domain}_prompt.json",'r') as f:
+        prompt = json.load(f)
+        
     # 统计通过率
     Calcu_PASS = {}
     TOTAL,TOTAL_PASS = 0,0
@@ -164,9 +157,7 @@ if __name__ == "__main__":
             "ACC":0.0000 
         }
         CORCER[domain] = {}
-        
         for sample in tqdm(data[domain]):
-            
             CORCER[domain][sample[0]]={
                 "COR":0.0000,
                 "CER":0.0000

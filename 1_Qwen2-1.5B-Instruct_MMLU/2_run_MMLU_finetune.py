@@ -10,7 +10,7 @@ import os
 import numpy as np
 
 DATASET= "/data/data_public/breeze/KnowledgeBoundary/data/MMLU/MMLU_ID_train.json"
-MODELPATH = "/data/data_public/breeze/finetuned_models/Qwen2_1.5B-Instruct-LFfinefune"
+MODELPATH = "/data/data_public/breeze/finetuned_models/MMLU/Qwen2-1.5B-Instruct/Qwen2_1.5B-Instruct-LFfinefune"
 
 choices = ["A", "B", "C", "D"]
 
@@ -44,33 +44,7 @@ def format_shots(prompt_data):
 
 
 def gen_prompt(input_list,subject,prompt_data):
-    # prompt = "The following are multiple choice questions (with answers) about {}.\n\n".format(
-    #     format_subject(subject)
-    # )
-    
-    # prompt+= "If you know what the answer is, just print the answer, not the content of the answer.If you're not sure about the generated answer or you don't know how to answer the question, output: N."
-    
-    # prompt += """
-    # If you know what the answer is, just print the answer, not the content of the answer.
-    #         "Find all c in Z_3 such that Z_3[x]/(x^2 + c) is a field.",
-    #         "0",
-    #         "1",
-    #         "2",
-    #         "3",
-    #         "B"
-    # If you're not sure about the generated answer or you don't know how to answer the question, output: N.
-    #             "Statement 1 | If aH is an element of a factor group, then |aH| divides |a|. Statement 2 | If H and K are subgroups of G then HK is a subgroup of G.",
-    #         "True, True",
-    #         "False, False",
-    #         "True, False",
-    #         "False, True",
-    #         "N"
-    # """
-    
-    #prompt += format_shots(prompt_data)
-    
     prompt = format_example(input_list)
-    
     return prompt
 
 def inference(tokenizer,model,input_text,subject,prompt_data):

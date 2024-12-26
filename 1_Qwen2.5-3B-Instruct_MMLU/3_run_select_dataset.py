@@ -9,7 +9,7 @@ import numpy as np
 pre_res_path = "/data/data_public/breeze/KnowledgeBoundary/1_Qwen2.5-3B-Instruct_MMLU/evalution_res/01_origin/MMLU_CORCER.json"
 aft_res_path = "/data/data_public/breeze/KnowledgeBoundary/1_Qwen2.5-3B-Instruct_MMLU/evalution_res/finetuned/CORCER_finetuned.json"
 #RAIT数据集 路径
-RAITset_path = "/data/data_public/breeze/KnowledgeBoundary/1_Qwen2.5-3B-Instruct_MMLU/ModelGenData/01_origin/C-Eval_LMFlow.json"
+RAITset_path = "/data/data_public/breeze/KnowledgeBoundary/1_Qwen2.5-3B-Instruct_MMLU/ModelGenData/01_origin/MMLU_LMFlow.json"
 
 #结果路径
 res_COR_Change_Data_path = "./RES_DATASET/sub_CorChange.json"
@@ -23,8 +23,8 @@ res_CER_Change_Data_path_LF = "./RES_DATASET/QWen2.5-3B/sub_CorCerChange_LF.json
 RATIO = 0.5
 
 #为了LLaMa-Factory 进行微调，修改数据集格式
-PATH_LF_RAIT = f"./ModelGenData/Qwen2-1.5B-Instruct/MMLU_LF.json"
-PATHRES_LF_RAIT = f"./RES_DATASET/QWen2-1.5B_finetined_LF/CEval_LF_{RATIO}.json"
+PATH_LF_RAIT = f"/data/data_public/breeze/KnowledgeBoundary/1_Qwen2.5-3B-Instruct_MMLU/ModelGenData/01_origin/MMLU_LF.json"
+PATHRES_LF_RAIT = f"./RES_DATASET/QWen2.5-3B_finetined_LF/MMLU_LF_{RATIO}.json"
 
 
 with open(pre_res_path,'r') as f:
