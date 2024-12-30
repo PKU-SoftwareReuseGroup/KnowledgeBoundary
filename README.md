@@ -215,6 +215,145 @@ Bruce Perens 是知名的美国软件自由活动家和开源软件的倡导者�
 
 ## Task 2.2.1 让大模型在不知道的时候回答“不知道”
 
+我们选择使用微调的方式，要达到的目标是不用prompt提示模型`If you don't know, please output 'I don't know'.`，prompt中仅仅有待回答选择题的题干和四个选项的时候，也可以让模型输出拒绝。
+
+### 模型选择：
+
+**Qwen2-1.5B-Instruct**
+
+Qwen2.5-3B
+
+openllama-3B
+
+### 数据集选择：
+
+单选题数据集：MMLU
+
+测试微调模型**拒绝**能力：MMLU_ID_train
+
+测试微调模型**泛化**能力：MMLU_ID_test、MMLU_OOD_test
+
+### 微调方式：
+
+使用`LLaMa-Factory`方式进行微调：
+
+`LLaMa-Factory`微调需要使用如下的`alpaca`数据格式，
+
+```json
+[
+  {
+    "instruction": "用户指令（必填）",
+    "input": "用户输入（选填）",
+    "output": "模型回答（必填）",
+    "system": "系统提示词（选填）",
+    "history": [
+      ["第一轮指令（选填）", "第一轮回答（选填）"],
+      ["第二轮指令（选填）", "第二轮回答（选填）"]
+    ]
+  }
+]
+```
+
+所以在对1.0所做的知识边界测试中，同步生成了该类型的数据集：
+
+如果第一步知识边界测试中，模型回答对了问题，则保留其选择的正确答案，如果模型回答错，就用N替换其原本的答案，用意是用`N`来表示模型所不知道的知识，从而构建起模型的拒绝域。选择用`N`的理由是我们在面对选择题时，采用的方法是截取第一个`token`，并且根据其概率，选择概率最大的进行输出。在构建拒绝方式的时候输出`N`和`I don't know`本质上并没有区别，均可以表达模型具备了拒绝能力。在构建数据集时，我们选择了两种`Instruction`的构造方式：
+
+**第一种**
+
+本种方式更像是应用prompt显式提示大模型遇到不知道的问题就输出`N`。后续实验结果表明，将这种方式应用在`Instruction`中，可能模型理解的并不好，没有判断出哪些知识是自己掌握得并不好的。
+
+```json
+[
+	  {
+        "instruction": "If you know what the answer is, just print the answer, not the content of the answer.If you're not sure about the generated answer or you don't know how to answer the question, output: N.",
+        "input": "Statement 1 | Every solvable group is of prime-power order. Statement 2 | Every group of prime-power order is solvable.\nA. True, True\nB. False, False\nC. True, False\nD. False, True\nAnswer:",
+        "output": "N"
+    },
+    {
+        "instruction": "If you know what the answer is, just print the answer, not the content of the answer.If you're not sure about the generated answer or you don't know how to answer the question, output: N.",
+        "input": "Find all c in Z_3 such that Z_3[x]/(x^3 + cx^2 + 1) is a field.\nA. 0\nB. 2\nC. 1\nD. 3\nAnswer:",
+        "output": "B"
+    }
+]
+```
+
+**第二种**
+
+本种方式类似于打标签的方式，即在`Instruction`中说明，现在的`output`为`N`的是你所不确定的知识，现在的`output`为四个选项其中一个的为你所确定的知识，这样的`Instruction`构建更能够让模型清楚自己哪些知识是不清楚的，也能够建立起不确定知识输出`N`的拒绝意识，在后边的实验结果中显示，本种`Instruction`构建方式有效。
+
+```json
+[
+    {
+        "instruction": "Output as N means the knowledge you are not sure about, and output as one of A, B, C, D means the knowledge you are certain about.",
+        "input": "Statement 1 | Every solvable group is of prime-power order. Statement 2 | Every group of prime-power order is solvable.\nA. True, True\nB. False, False\nC. True, False\nD. False, True\nAnswer:",
+        "output": "N"
+    },
+    {
+        "instruction": "Output as N means the knowledge you are not sure about, and output as one of A, B, C, D means the knowledge you are certain about.",
+        "input": "Find all c in Z_3 such that Z_3[x]/(x^3 + cx^2 + 1) is a field.\nA. 0\nB. 2\nC. 1\nD. 3\nAnswer:",
+        "output": "B"
+    },
+]
+```
+
+### 微调结果：
+
+#### Qwen2.5-3B
+
+该模型微调之后可以规整的输出选择题的答案，并且出现了少量的拒绝，能够证明我们的微调方法是有效的。
+
+```json
+    "Final_Evaluation": {
+        "Pass": 1604,
+        "UNPASS": 817,
+        "REFUSE": 27,
+        "Total": 2448,
+        "Accuarcy": 0.6552
+    }
+```
+
+但是其在未被微调之前并不能直接规整输出A，B，C，D四个选项其中的一个，而是只能输出：
+
+>The answer is **A**. The statement is ……
+
+由于我们下一步减少`over-refusal`的时候需要采样输出答案的概率，从而判断准确性和正确性，但是该模型无法采样到概率，所以不能应用在下一个减少`over-refusal`的任务当中。
+
+#### OpenLLaMa-3B
+
+该模型为**续写模型**，其并不能有效理解`prompt`的语义，在初始测试知识边界的环节，其输出和`prompt`提示语句`If you don't know, please output 'N'.`的位置有关，若放在待回答问题的前边，模型会忽略该`prompt`的存在，若放在待回答问题后，模型会根据该`prompt`续写，输出无意义和逻辑的回答。并不能规整的输出拒绝，在经过微调后，若不加入`If you don't know, please output 'N'.`，仍不能输出有效的拒绝，即在答案中并没有`N`的出现，若在此时加入`prompt`，无论加在什么位置，模型均可以输出拒绝`N`。不过据观察，此时模型的回复中不再出现答案`D`，应该是模型的能力所限。
+
+#### Qwen2-1.5B-Instruct
+
+由于该模型是可以理解`Instruct`内容的，即如果`prompt`中提示`If you don't know, please output 'N'.`，模型可以在面对问题时输出拒绝。所以使用`prompt`方式来显式提示模型遇到不知道的问题就输出拒绝，是会影响判断模型微调前后的结果的，所以在微调前后的测试中，`prompt`中只有问题的题干和四个选项。
+
+在测试中发现，使用上边第一种`Instruction`方式构建的数据集效果并不理想，在MMLU_ID_train的2448个问题中只出现了11个拒绝。
+
+```json
+    "Final_Evaluation": {
+        "Pass": 1395,
+        "UNPASS": 1042,
+        "REFUSE": 11,
+        "Total": 2448,
+        "Accuarcy": 0.5699
+    }
+```
+
+下图为使用第二种`Instruction`进行微调，模型微调前后在MMLU_ID_train数据集的各个子领域中的表现对比：
+
+![Before_ft](./0_GraphDisplay/res/2.2.1/Before_ft.png)
+
+![After_ft](./0_GraphDisplay/res/2.2.1/After_ft.png)
+
+从对比图中可以看出，微调后的模型不仅出现了拒绝回答问题的情况，成功构建了拒绝域，而且对于大部分的错误域问题都可以成功拒绝，只有一小部分原本正确的答案出现了`over-refusal`的问题。
+
+此外，为了测试微调后的模型在未经训练过的数据及域外知识上的表现，测试模型的泛化能力，我们还在MMLU_ID_test和MMLU_OOD_test数据集上进行了实验：
+
+![b74752d5bfeb2e943f278072f833b38](./0_GraphDisplay/res/2.2.1/b74752d5bfeb2e943f278072f833b38.png)
+
+测试结果表明，在未经训练过的数据上仍然可以构建起拒绝域，说明模型在面对不确定的问题时，已经有了拒绝意识，可以在一定的程度上减少模型的幻觉问题。
+
+在三种模型上的微调实验结果纵向对比表明，微调的效果与模型自身的能力息息相关。在Qwen2-1.5B-Instruct上的实验表明，我们所提出的使用第二种`Instruction`构建的数据集进行微调的方式是有效的，可以成功让微调模型在无prompt提示的情况下输出拒绝，成功构建拒绝域。并且仅有少量的`over-refusal`问题出现。
+
 
 ## Task 2.2.2 避免知道的知识被错回复为“不知道”，降低或者避免over-refusal
 进行finetune时，为避免模块冲突，请用conda复制一份环境，并还原`transformers == 4.47.0`和`tokenizers==0.21.0`版本
@@ -230,16 +369,22 @@ huggingface-cli download --resume-download openlm-research/open_llama_3b --local
 
 注意在相应文件中 **修改model和dataset路径**
 
-```python
-python run_llama3b_MMLU.py #用MMLU数据集对llama3b模型进行提问并统计ACC，同时计算每一个问题的COR和CER
+```bash
+#文件夹 1_Qwen2-1.5B-Instruct_{dataset}/ 中存放相关代码
 
-./scripts/run_finetune.sh #将产生的问答结果用来微调模型 
+python 1_run_MMLU_RAIT #用MMLU数据集对llama3b模型进行提问并统计ACC，同时计算每一个问题的COR和CER
 
-python run_llama3b_finetune_MMLU.py #用MMLU数据集对微调后的模型进行提问并统计ACC，同时计算每一个问题的COR和CER
+#将产生的问答结果用 LLaMa-Factory 微调模型 
 
-python run_select_dataset.py #删掉训练前后的Dink中变成正确的部分，结果存放于RES_DATASET中
+python 2_run_MMLU_finetune.py #用MMLU数据集对微调后的模型进行提问并统计ACC，同时计算每一个问题的COR和CER
 
-python run_calc.py #统计 筛选数据集 前后 正确个数、正确个数提升、正确个数下降、正确率提升、确定性提升等
+python 3_run_select_dataset.py #筛选数据集
+
+#将筛选后的结果用 LLaMa-Factory 微调模型 
+
+python 4_run_MMLU_finetune #统计 筛选数据集 前后 正确个数、正确个数提升、正确个数下降、正确率提升、确定性提升等
+
+#统计数据以及画图代码 存放于 0_GraphDisplay/ 文件夹中
 
 ```
 
@@ -401,8 +546,7 @@ $$
 ```
 
 ## 测试结果
-
-对于模型 `qwen2-1.5B-Instruct` 模型 在 `MMLU` 数据集上的表现：
+### 对于模型 `qwen2-1.5B-Instruct` 模型 在 `MMLU` 数据集上的表现：
 
 ```json
 //原始模型
@@ -442,7 +586,7 @@ $$
 ![image](./0_GraphDisplay/res/qwen2-1-5B-MMLU/The%20dataset%20was%20filtered%20with%20a%20threshold%20of%200.2.png)
 ![image](./0_GraphDisplay/res/qwen2-1-5B-MMLU/Total%20Eva.png)
 
-对于模型 qwen2-1.5B-Instruct 模型 在 `CEval` 数据集上的表现：
+### 对于模型 qwen2-1.5B-Instruct 模型 在 `CEval` 数据集上的表现：
 ![image](./0_GraphDisplay/res/qwen2-1-5B-CEval/01_Origin.png)
 ![image](./0_GraphDisplay/res/qwen2-1-5B-CEval/02_FirstfinetuneModel.png)
 ![iamge](./0_GraphDisplay/res/qwen2-1-5B-CEval/04_The%20dataset%20was%20filtered%20with%20a%20threshold%20of%200.5.png)
