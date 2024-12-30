@@ -433,21 +433,21 @@ $$
 在本次任务中，对MMLU进行询问模型时：
 ```python
  probs = (
-            torch.nn.functional.softmax(
-                torch.tensor(
-                    [
-                        logits[tokenizer("A").input_ids[0]],
-                        logits[tokenizer("B").input_ids[0]],
-                        logits[tokenizer("C").input_ids[0]],
-                        logits[tokenizer("D").input_ids[0]],
-                    ]
-                ),
-                dim=0,
-            )
-            .detach()
-            .cpu()
-            .numpy()
-        )
+    torch.nn.functional.softmax(
+        torch.tensor(
+            [
+                logits[tokenizer("A").input_ids[0]],
+                logits[tokenizer("B").input_ids[0]],
+                logits[tokenizer("C").input_ids[0]],
+                logits[tokenizer("D").input_ids[0]],
+            ]
+        ),
+        dim=0,
+    )
+    .detach()
+    .cpu()
+    .numpy()
+)
 ```
 该函数获知对于 `A` `B` `C` `D`四个答案概率，由此通过
 ```python
@@ -476,6 +476,7 @@ Cer(\mathcal{M},x_i)=\frac{1}{N(N-1)}\sum_{\hat{a_j},\hat{a_k}\in \hat{A}_{i},j\
 $$
 
 其中 $\hat{A_i}$ 是对于问题 $i$ 的多次回答答案的集合，  $E(a_j)$ 是回答 $a_j$ 的表征向量。
+
 表征向量由 https://huggingface.co/sentence-transformers/all-MiniLML6-v2 模型算出
 
 ## 方法：
@@ -526,28 +527,29 @@ messages = [
 在模型生成结果设置中 **增加对于 N 的概率计算**：
 
 ```python
-    probs = (
-        torch.nn.functional.softmax(
-            torch.tensor(
-                [
-                    logits[tokenizer("A").input_ids[0]],
-                    logits[tokenizer("B").input_ids[0]],
-                    logits[tokenizer("C").input_ids[0]],
-                    logits[tokenizer("D").input_ids[0]],
-                    # FIX
-                    logits[tokenizer("N").input_ids[0]],
-                ]
-            ),
-            dim=0,
-        )
-        .detach()
-        .cpu()
-        .numpy()
+probs = (
+    torch.nn.functional.softmax(
+        torch.tensor(
+            [
+                logits[tokenizer("A").input_ids[0]],
+                logits[tokenizer("B").input_ids[0]],
+                logits[tokenizer("C").input_ids[0]],
+                logits[tokenizer("D").input_ids[0]],
+                # FIX
+                logits[tokenizer("N").input_ids[0]],
+            ]
+        ),
+        dim=0,
     )
+    .detach()
+    .cpu()
+    .numpy()
+)
 ```
 
 ## 测试结果
-模型 `Qwen2-1.5B-Instruct` 模型 在 `MMLU` 数据集上的表现：
+
+#### 模型 `Qwen2-1.5B-Instruct` 模型 在 `MMLU` 数据集上的表现：
 
 ```json
 //原始模型
@@ -601,7 +603,7 @@ RAIT 微调后模型
 
 ![image](./0_GraphDisplay/res/qwen2-1-5B-MMLU/Total%20Eva.png)
 
-### 对于模型 qwen2-1.5B-Instruct 模型 在 `CEval` 数据集上的表现：
+#### 对于模型 qwen2-1.5B-Instruct 模型 在 `CEval` 数据集上的表现：
 
 原始模型
 
